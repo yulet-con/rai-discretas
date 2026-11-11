@@ -92,8 +92,8 @@ data/                  CSV de ejemplo (semilla 42, 450 perfiles)
 
 ## Equipo
 
-- [Integrante 1]
-- [Integrante 2]
+- Asmaa Tarabein ([@AsmaaTarabein](https://github.com/AsmaaTarabein))
+- Mari ([@maryfp12](https://github.com/maryfp12))
 - [Integrante 3]
 - [Integrante 4]
 
