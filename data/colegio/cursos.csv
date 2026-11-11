@@ -1,0 +1,49 @@
+id,asignatura,grupo,docente_id
+C01,Matemáticas,9A,D01
+C02,Matemáticas,9B,D01
+C03,Matemáticas,10A,D01
+C04,Matemáticas,10B,D02
+C05,Matemáticas,11A,D02
+C06,Matemáticas,11B,D02
+C07,Lenguaje,9A,D03
+C08,Lenguaje,9B,D03
+C09,Lenguaje,10A,D04
+C10,Lenguaje,10B,D04
+C11,Lenguaje,11A,D04
+C12,Lenguaje,11B,D03
+C13,Ciencias Naturales,9A,D05
+C14,Ciencias Naturales,9B,D06
+C15,Ciencias Naturales,10A,D06
+C16,Ciencias Naturales,10B,D06
+C17,Ciencias Naturales,11A,D05
+C18,Ciencias Naturales,11B,D05
+C19,Sociales,9A,D08
+C20,Sociales,9B,D08
+C21,Sociales,10A,D08
+C22,Sociales,10B,D07
+C23,Sociales,11A,D07
+C24,Sociales,11B,D07
+C25,Inglés,9A,D10
+C26,Inglés,9B,D10
+C27,Inglés,10A,D09
+C28,Inglés,10B,D09
+C29,Inglés,11A,D09
+C30,Inglés,11B,D10
+C31,Educación Física,9A,D12
+C32,Educación Física,9B,D11
+C33,Educación Física,10A,D11
+C34,Educación Física,10B,D11
+C35,Educación Física,11A,D12
+C36,Educación Física,11B,D12
+C37,Artes,9A,D13
+C38,Artes,9B,D13
+C39,Artes,10A,D13
+C40,Artes,10B,D14
+C41,Artes,11A,D14
+C42,Artes,11B,D14
+C43,Tecnología,9A,D15
+C44,Tecnología,9B,D15
+C45,Tecnología,10A,D16
+C46,Tecnología,10B,D16
+C47,Tecnología,11A,D16
+C48,Tecnología,11B,D15
