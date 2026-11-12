@@ -2,7 +2,7 @@
 from collections import Counter
 from itertools import combinations
 
-from .catalogo import MINIMO_PARA_MOSTRAR, NECESIDADES_COMUNES
+from .catalogo import NECESIDADES_COMUNES
 from .grafos import Grafo
 
 
@@ -118,15 +118,42 @@ def necesidades_comunes(categorias):
     return {n for n, d in NECESIDADES_COMUNES.items() if set(d["de"]) & set(categorias)}
 
 
-def cifra_visible(k):
-    """Privacidad: con menos de MINIMO_PARA_MOSTRAR estudiantes no se da la cifra exacta."""
-    if k == 0:
-        return "0"
-    return str(k) if k >= MINIMO_PARA_MOSTRAR else f"menos de {MINIMO_PARA_MOSTRAR}"
+NOTA_MINIMA = 3.0   # nota aprobatoria en escala 0-5
+
+
+def lista_curso(datos, curso_id):
+    """Lista de clase con indicador de apoyo (solo si hay consentimiento) y nota de corte.
+
+    El indicador dice QUE el estudiante tiene apoyo registrado, nunca QUÉ tiene.
+    alerta <-> apoyo ∧ (nota < NOTA_MINIMA)
+    """
+    est = {e["id"]: e for e in datos["estudiantes"]}
+    vis = visibles(datos)
+    filas = []
+    for r in datos["inscripciones"]:
+        if r["curso_id"] != curso_id:
+            continue
+        apoyo = r["estudiante_id"] in vis
+        nota = float(r["nota_corte1"])
+        filas.append({"id": r["estudiante_id"], "nombre": est[r["estudiante_id"]]["nombre"],
+                      "apoyo": apoyo, "nota": nota, "alerta": apoyo and nota < NOTA_MINIMA})
+    # Primero quienes tienen apoyo, luego por nota de menor a mayor.
+    return sorted(filas, key=lambda f: (not f["apoyo"], f["nota"]))
+
+
+def alertas(datos):
+    """Alertas automáticas de mitad de semestre para la unidad de apoyo:
+    estudiante con apoyo registrado y nota de corte por debajo de la mínima."""
+    res = []
+    for c in datos["cursos"]:
+        for f in lista_curso(datos, c["id"]):
+            if f["alerta"]:
+                res.append({**f, "curso_id": c["id"], "docente_id": c["docente_id"]})
+    return res
 
 
 def panel_curso(datos, curso_id):
-    """Lo que ve el docente de un curso: solo cifras agregadas, sin nombres ni diagnósticos.
+    """Lo que ve el docente de un curso: cifras agregadas y necesidades comunes, sin diagnósticos.
 
     Para cada necesidad común n: |C_k ∩ V ∩ f⁻¹(n)|. Un estudiante con varias
     categorías cuenta una sola vez en cada necesidad (unión de conjuntos).

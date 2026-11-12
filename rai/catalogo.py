@@ -88,9 +88,6 @@ NECESIDADES_COMUNES = {
     },
 }
 
-# Con menos de este número de estudiantes no se muestra la cifra exacta (privacidad).
-MINIMO_PARA_MOSTRAR = 3
-
 # Probabilidad relativa de cada categoría entre quienes tienen alguna necesidad
 # (supuesto de la simulación; se justifica en el informe).
 PESO_CATEGORIA = {"cognitiva": 0.40, "psicosocial": 0.25, "visual": 0.13,

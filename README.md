@@ -12,7 +12,7 @@ matemático.
 | Parte | Teoría | Dónde está |
 |---|---|---|
 | Necesidades comunes por curso (sin nombres) | Conjuntos, unión, función categoría → necesidad | `rai/modelo.py` |
-| Regla de privacidad `s ↔ (p ∧ q ∧ r)` | Lógica proposicional | `rai/modelo.py` |
+| Regla de privacidad `s ↔ (p ∧ q ∧ r)` y alerta `apoyo ∧ nota < 3,0` | Lógica proposicional | `rai/modelo.py` |
 | Cursos y docentes que priorizar | Grafos, grado, cercanía, intermediación (Brandes) | `rai/grafos.py` |
 | Horario de actividades de integración | Coloración (Welsh–Powell) y número cromático exacto | `rai/grafos.py` |
 | Estudiantes aislados antes y después | Vértices de grado 0, componentes conexas | `rai/grafos.py` |
@@ -35,16 +35,21 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-En la barra lateral se elige el tipo de institución, el número de perfiles (300 a 600), el
-porcentaje con alguna necesidad de apoyo y la semilla. Vistas:
+La aplicación sigue un árbol: la unidad de apoyo es la raíz y tiene tres ramas.
 
-1. **Panorama**: indicadores para la unidad de apoyo y cursos que priorizar.
-2. **Panel docente**: por curso, una sola cifra (cuántos necesitan apoyo, sin nombres), las
-   necesidades comunes con sus herramientas y el botón para planear en persona con la unidad de apoyo.
-3. **Red de cursos y docentes**: grafo, centralidades y coordinador sugerido.
-4. **Actividades de integración**: grafo de choques, coloración y horario.
-5. **Integración social**: estudiantes aislados antes y después de las actividades.
-6. **Pruebas**: casos con resultado conocido.
+| Vista | Para quién | Qué hace |
+|---|---|---|
+| 🏛️ **Inicio** | Bienestar / Orientación | Resumen de las tres ramas, alertas de mitad de semestre y solicitudes de planeación |
+| **1 · Apoyo académico** | Docente | Cuántos estudiantes tienen apoyo, necesidades comunes con herramientas, lista de clase con indicador ● y nota de corte, botón para planear en persona |
+| **2 · Integración** | Bienestar | Horario de actividades por intereses (coloración) y estudiantes que siguen aislados |
+| **3 · Comunidad docente** | Docentes | Foro con opción anónima, mentores sugeridos y colegas por invitar |
+| ✓ **Pruebas** | Sustentación | Casos con resultado conocido |
+
+El docente no llena nada extra: las notas de corte llegan del sistema académico (simuladas) y la
+alerta a la unidad de apoyo es automática (`apoyo ∧ nota < 3,0`). Cada rama tiene un desplegable
+**Σ Cómo funciona** con los grafos y las medidas para la sustentación. Los parámetros de la
+simulación (institución, 300–600 perfiles, porcentaje con necesidad, semilla) están en
+**⚙️ Simulación** en la barra lateral.
 
 **Generar los datos como CSV** (entrada/salida reproducible):
 
@@ -68,6 +73,8 @@ python -m unittest -v
 | Camino Fútbol–Música–Ajedrez | χ = 2 |
 | Camino + Teatro (triángulo) | χ = 3 |
 | Tabla de verdad de la privacidad | solo p = q = r = V muestra el ajuste |
+| Agrupación en necesidades comunes | un estudiante cuenta una vez por necesidad |
+| Alerta de mitad de semestre | solo apoyo con consentimiento y nota < 3,0 |
 | Simulación | 300–600 perfiles, misma semilla → mismos datos |
 
 ## Datos

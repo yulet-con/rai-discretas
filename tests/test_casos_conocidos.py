@@ -8,7 +8,7 @@ from itertools import product
 from rai.grafos import (Grafo, aislados, cercania, coloracion_welsh_powell,
                         componentes_conexas, es_coloracion_valida, grado,
                         intermediacion, numero_cromatico_exacto)
-from rai.modelo import cifra_visible, mostrar_ajuste, necesidades_comunes, panel_curso
+from rai.modelo import alertas, lista_curso, mostrar_ajuste, necesidades_comunes, panel_curso
 from rai.simulacion import simular
 
 
@@ -98,10 +98,26 @@ class CasoNecesidadesComunes(unittest.TestCase):
                          {"tiempo": 2, "instrucciones": 2, "espacio": 1, "informacion": 1})
         self.assertNotIn("lista", p)
 
-    def test_cifras_pequenas_ocultas(self):
-        self.assertEqual(cifra_visible(0), "0")
-        self.assertEqual(cifra_visible(2), "menos de 3")
-        self.assertEqual(cifra_visible(3), "3")
+    def test_indicador_y_alerta_de_mitad_de_semestre(self):
+        # alerta <-> apoyo ∧ nota < 3.0
+        datos = {
+            "estudiantes": [
+                {"id": "E1", "nombre": "A", "necesidades": "cognitiva", "consentimiento": True},
+                {"id": "E2", "nombre": "B", "necesidades": "visual", "consentimiento": True},
+                {"id": "E3", "nombre": "C", "necesidades": "auditiva", "consentimiento": False},
+                {"id": "E4", "nombre": "D", "necesidades": "", "consentimiento": False},
+            ],
+            "cursos": [{"id": "C1", "docente_id": "D1"}],
+            "inscripciones": [
+                {"estudiante_id": "E1", "curso_id": "C1", "nota_corte1": 2.4},  # apoyo, baja -> alerta
+                {"estudiante_id": "E2", "curso_id": "C1", "nota_corte1": 4.1},  # apoyo, bien
+                {"estudiante_id": "E3", "curso_id": "C1", "nota_corte1": 2.0},  # sin consentimiento
+                {"estudiante_id": "E4", "curso_id": "C1", "nota_corte1": 2.9},  # sin apoyo
+            ],
+        }
+        lista = lista_curso(datos, "C1")
+        self.assertEqual([f["id"] for f in lista if f["apoyo"]], ["E1", "E2"])
+        self.assertEqual([a["id"] for a in alertas(datos)], ["E1"])
 
 
 class CasoSimulacion(unittest.TestCase):

@@ -9,6 +9,8 @@ Supuestos de la simulación (se justifican en el informe):
 - El 85 % de ellos da consentimiento para compartir los ajustes con docentes.
 - Algunos estudiantes tienden a trabajar solos; la tendencia es algo mayor entre
   quienes tienen una necesidad de apoyo (barreras de participación).
+- Nota de mitad de semestre (escala 0-5): normal con media 3,6 y desviación 0,7;
+  media 3,1 para quienes tienen una necesidad de apoyo (aún sin ajustes en clase).
 """
 import csv
 import os
@@ -140,6 +142,15 @@ def simular(tipo="universidad", n_estudiantes=450, prop_necesidad=0.12, semilla=
             if rng.random() < (0.65 if e["tiende_solo"] else 0.8):
                 participaciones.append({"estudiante_id": e["id"], "actividad": interes})
 
+    # ---------------- notas de mitad de semestre (llegan del sistema académico)
+    # Generador aparte para no alterar el resto de la simulación.
+    rng_notas = random.Random(semilla + 1)
+    con_necesidad = {e["id"] for e in estudiantes if e["necesidades"]}
+    for ins in inscripciones:
+        media = 3.1 if ins["estudiante_id"] in con_necesidad else 3.6
+        nota = min(5.0, max(0.0, rng_notas.gauss(media, 0.7)))
+        ins["nota_corte1"] = round(nota, 1)
+
     return {
         "estudiantes": estudiantes,
         "docentes": docentes,
@@ -174,6 +185,8 @@ def cargar_csv(carpeta):
     for e in datos["estudiantes"]:
         for col in ("consentimiento", "tiende_solo"):
             e[col] = str(e[col]).strip().lower() == "true"
+    for ins in datos["inscripciones"]:
+        ins["nota_corte1"] = float(ins["nota_corte1"])
     return datos
 
 
