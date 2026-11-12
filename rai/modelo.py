@@ -167,3 +167,37 @@ def panel_curso(datos, curso_id):
             por_necesidad[n].add(e)
     return {"total": len(miembros), "con_apoyo": len(vis),
             "por_necesidad": {n: len(s) for n, s in por_necesidad.items() if s}}
+
+
+ESTADOS_SOLICITUD = ["Pendiente", "Agendada", "Realizada"]
+
+
+def solicitudes_simuladas(datos, semilla=0, prob=0.5, minimo=3, umbral_docentes=4):
+    """Solicitudes de planeación que harían los docentes en las semanas 1 a 3.
+
+    Supuesto: un docente pide planear un curso con probabilidad `prob` si ese curso
+    tiene al menos `minimo` estudiantes con apoyo. Se sugiere invitar a sus vecinos
+    en el grafo de docentes (comparten estudiantes con apoyo).
+    """
+    import random
+    rng = random.Random(semilla)
+    gd = grafo_docentes(datos, umbral_docentes)
+    nombre = {d["id"]: d["nombre"] for d in datos["docentes"]}
+    res = []
+    for c in datos["cursos"]:
+        p = panel_curso(datos, c["id"])
+        if p["con_apoyo"] < minimo or rng.random() >= prob:
+            continue
+        d = c["docente_id"]
+        vecinos = sorted(gd.vecinos(d), key=lambda v: -gd.adj[d][v])[:2]
+        res.append({
+            "Semana": rng.randint(1, 3),
+            "Docente": nombre[d],
+            "Curso": f'{c["asignatura"]} ({c["grupo"]})',
+            "Con apoyo": p["con_apoyo"],
+            "Necesidades": ", ".join(NECESIDADES_COMUNES[n]["nombre"] for n in
+                                     sorted(p["por_necesidad"], key=lambda n: -p["por_necesidad"][n])[:2]),
+            "Invitar también a": ", ".join(nombre[v] for v in vecinos),
+            "Estado": rng.choice(ESTADOS_SOLICITUD),
+        })
+    return sorted(res, key=lambda r: (r["Semana"], r["Docente"]))

@@ -141,6 +141,17 @@ grafo (comparten estudiantes con apoyo).
 - Agregar o cambiar una herramienta → lista `herramientas` dentro de `NECESIDADES_COMUNES` en `rai/catalogo.py`.
 - Agregar una necesidad común → nueva entrada en `NECESIDADES_COMUNES` con `nombre`, `icono`, `de` (categorías) y `herramientas`.
 
+**Pregunta probable:** *"La universidad ya avisa a Bienestar cuando el promedio baja. ¿Para qué
+la planeación y la alerta?"* → Ese sistema es **reactivo**: avisa cuando el semestre ya está en
+riesgo y mira el promedio general. RAI es **preventivo**: en las semanas 1 a 3, antes de la primera
+nota, el docente ya sabe que tiene estudiantes con apoyo y adapta su clase. La alerta de mitad de
+semestre de RAI **complementa** la existente: es por curso y conecta la nota con una necesidad
+registrada. Lo ideal es que RAI le envíe sus alertas al sistema que ya existe, no que lo reemplace.
+
+**Solicitudes simuladas.** En la vista Bienestar aparecen solicitudes de planeación generadas por
+`modelo.solicitudes_simuladas`: un docente pide planear un curso con probabilidad 0,5 si ese curso
+tiene al menos 3 estudiantes con apoyo. El botón «🎲 Simular otras solicitudes» genera otro lote.
+
 **Pregunta probable:** *"Si el docente ve el ●, ¿no se rompe la privacidad?"* → El ● solo aparece
 con consentimiento y no dice qué necesidad tiene. Lo individual se trata en persona con Bienestar.
 

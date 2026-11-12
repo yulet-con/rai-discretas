@@ -220,9 +220,11 @@ if pagina == LIBRO:
         k[0].metric("Cursos con estudiantes con apoyo", S["cursos_con_apoyo"])
         k[1].metric("Actividades de integración", S["actividades"])
         k[2].metric("Franjas horarias necesarias", S["franjas"])
-        st.markdown("Los docentes revisan las **necesidades comunes** de su clase y sus herramientas, "
-                    f"y piden un espacio de planeación con {conf['unidad_apoyo']}. La red de docentes "
-                    "sugiere a quién invitar. A la vez se programan las actividades por intereses.")
+        st.markdown("**Antes de la primera nota**, los docentes revisan las **necesidades comunes** de su "
+                    f"clase y piden un espacio de planeación con {conf['unidad_apoyo']}. Al pedirlo, la "
+                    "plataforma les sugiere a qué colegas invitar: los que tienen a los mismos estudiantes "
+                    "en sus clases, para coordinarse en una sola reunión. A la vez se programan las "
+                    "actividades por intereses.")
         teoria("grafos y centralidad (a quién convocar) y coloración de grafos "
                f"({S['actividades']} actividades caben en χ = {S['franjas']} franjas).")
 
@@ -233,10 +235,11 @@ if pagina == LIBRO:
         teoria("vértices de grado 0 en el grafo de compañeros, antes y después.")
 
     def p_corte1():
-        comparar("alertas tempranas de estudiantes con apoyo y nota < 3,0",
+        comparar("alertas por curso que conectan la nota con una necesidad registrada",
                  "0", S["alertas_corte1"],
-                 "Sin la plataforma, nadie conecta la nota con la necesidad del estudiante hasta el final. "
-                 f"Con ella, {conf['unidad_apoyo']} recibe la alerta sola y hace seguimiento.")
+                 "La institución ya avisa cuando el promedio general baja mucho, pero ese aviso llega "
+                 "cuando el semestre ya está en riesgo y no dice en qué curso ni por qué. Esta alerta es "
+                 f"por curso, a mitad de semestre, y {conf['unidad_apoyo']} la recibe sola.")
         teoria("alerta ↔ apoyo ∧ (nota < 3,0).")
 
     def p_corte2():
@@ -313,29 +316,46 @@ elif pagina == RAMAS[1]:
     rama(c3, NARANJA, "3 · Comunidad docente", f"{len(st.session_state['foro'])} mensajes",
          f"en el foro · mentores: {', '.join(nombre_doc[d] for d in mentores[:2])}")
 
+    # Prevención: planeación antes de la primera nota
+    st.write("")
+    st.subheader("Solicitudes de planeación · semanas 1 a 3")
+    st.caption("Prevención: el docente planea su clase con " + conf["unidad_apoyo"] +
+               " antes de la primera nota, para que el estudiante no llegue a perder.")
+    lote = st.session_state.setdefault("lote_solicitudes", 0)
+    columnas = ["Semana", "Docente", "Curso", "Con apoyo", "Necesidades", "Invitar también a", "Estado"]
+    solicitudes = ([{**s, "Semana": "Ahora", "Estado": "Pendiente"} for s in st.session_state["solicitudes"]]
+                   + M.solicitudes_simuladas(datos, semilla * 1000 + lote))
+    estados = Counter(s["Estado"] for s in solicitudes)
+    k = st.columns([1, 1, 1, 1, 2])
+    k[0].metric("Solicitudes", len(solicitudes))
+    for col, e in zip(k[1:4], M.ESTADOS_SOLICITUD):
+        col.metric(e + "s", estados.get(e, 0))
+    if k[4].button("🎲 Simular otras solicitudes", width="stretch"):
+        st.session_state["lote_solicitudes"] = lote + 1
+        st.rerun()
+    tabla(solicitudes, columnas)
+
+    # Reacción: alertas de mitad de semestre
     st.write("")
     izq, der = st.columns([3, 2])
     with izq:
-        st.subheader("Alertas de mitad de semestre")
-        st.caption("Estudiantes con apoyo registrado y nota de corte menor que 3,0. Llegan solas, "
-                   "sin que el docente haga nada.")
+        st.subheader("Alertas de mitad de semestre · semana 8")
+        st.caption("Complementa el sistema de alertas académicas de la institución: ese avisa cuando el "
+                   "promedio general ya bajó; esta alerta es por curso y conecta la nota con una "
+                   "necesidad registrada (apoyo ∧ nota < 3,0). El docente no hace nada: llega sola.")
         filas = [{"Estudiante": a["nombre"], "Curso": nombre_curso[a["curso_id"]],
                   "Docente": nombre_doc[a["docente_id"]], "Nota": f"{a['nota']:.1f}"}
                  for a in sorted(R["alertas"], key=lambda a: a["nota"])]
-        tabla(filas[:10])
-        if len(filas) > 10:
+        tabla(filas[:8])
+        if len(filas) > 8:
             with st.expander(f"Ver las {len(filas)} alertas"):
-                tabla(filas[10:])
+                tabla(filas[8:])
     with der:
-        st.subheader("Solicitudes de planeación")
-        if st.session_state["solicitudes"]:
-            tabla(st.session_state["solicitudes"])
-        else:
-            st.info("Aún no hay solicitudes. Los docentes las envían con «Planear con "
-                    f"{conf['unidad_apoyo']}».")
+        st.subheader("Observaciones de docentes")
         if st.session_state["observaciones"]:
-            st.subheader("Observaciones de docentes")
             tabla(st.session_state["observaciones"])
+        else:
+            st.info("Aún no hay observaciones. Los docentes las envían desde «1 · Apoyo académico».")
 
     with st.expander("Σ Cómo funciona: qué cursos priorizar (grafo de cursos y centralidad)"):
         gc = M.grafo_cursos(datos, UMBRAL_CURSOS)
@@ -402,7 +422,8 @@ elif pagina == RAMAS[2]:
                         width="stretch"):
                 vecinos = sorted(gd.vecinos(doc_id), key=lambda d: -gd.adj[doc_id][d])[:3]
                 st.session_state["solicitudes"].append(
-                    {"Docente": nombre_doc[doc_id], "Curso": nombre_curso[c],
+                    {"Docente": nombre_doc[doc_id], "Curso": nombre_curso[c], "Con apoyo": p["con_apoyo"],
+                     "Necesidades": ", ".join(NECESIDADES_COMUNES[k]["nombre"] for k in p["por_necesidad"]),
                      "Invitar también a": ", ".join(nombre_doc[d] for d in vecinos)})
                 st.success(f"Solicitud enviada. {conf['unidad_apoyo']} te contactará."
                            + (" Sugerimos invitar a " + ", ".join(nombre_doc[d] for d in vecinos)
