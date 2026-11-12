@@ -17,6 +17,7 @@ import streamlit as st
 from rai import grafos as G
 from rai import modelo as M
 from rai.catalogo import FRANJAS, INSTITUCIONES, NECESIDADES_COMUNES
+from rai.semestre import simular_semestre
 from rai.simulacion import simular
 
 MORADO, AZUL, VERDE, NARANJA, GRIS = "#7C3AED", "#2563EB", "#059669", "#D97706", "#64748B"
@@ -104,7 +105,9 @@ def datos_simulados(tipo, n, prop, semilla):
 
 
 # ---------------------------------------------------------------- barra lateral
-RAMAS = ["🏛️ Inicio", "1 · Apoyo académico", "2 · Integración", "3 · Comunidad docente", "✓ Pruebas"]
+LIBRO, GUIA = "📖 Recorrido del semestre", "📘 Guía del equipo"
+RAMAS = [LIBRO, "🏛️ Inicio", "1 · Apoyo académico", "2 · Integración", "3 · Comunidad docente",
+         "✓ Pruebas", GUIA]
 with st.sidebar:
     st.markdown(f"<h2 style='color:{MORADO};margin-bottom:0'>RAI</h2>"
                 "<div class='rai-nota'>Red de Apoyo Inclusivo</div>", unsafe_allow_html=True)
@@ -150,14 +153,154 @@ def resumen(tipo, n, prop, semilla):
 
 
 R = resumen(tipo, n, prop, semilla)
+
+
+@st.cache_data
+def recorrido(tipo, n, prop, semilla, auto, ajustes, seguimiento):
+    return simular_semestre(datos_simulados(tipo, n, prop, semilla), auto / 100, ajustes, seguimiento)
+
 gd = M.grafo_docentes(datos, UMBRAL_DOCENTES)
 bt_doc = G.intermediacion(gd, normalizada=True)
 mentores = sorted(docentes, key=lambda d: (-bt_doc[d], -len(gd.adj[d])))[:3]
 por_invitar = sorted(docentes, key=lambda d: (len(gd.adj[d]), bt_doc[d]))[:3]
 
 
+# ================================================================ Libro: recorrido del semestre
+if pagina == LIBRO:
+    st.session_state.setdefault("pag", 0)
+    sup = st.session_state.setdefault("supuestos", {"auto": 30, "ajustes": 0.4, "seguimiento": 0.3})
+    S = recorrido(tipo, n, prop, semilla, sup["auto"], sup["ajustes"], sup["seguimiento"])
+    pct = lambda x: f"{x:.0%}"
+
+    def comparar(titulo, sin, con, nota=""):
+        a, b = st.columns(2)
+        a.markdown(f"<div class='rai-rama' style='border-color:{GRIS};background:#F8FAFC'>"
+                   f"<h4 style='color:{GRIS}'>Sin la plataforma</h4><div class='big'>{sin}</div>"
+                   f"<div class='rai-nota'>{titulo}</div></div>", unsafe_allow_html=True)
+        b.markdown(f"<div class='rai-rama' style='border-color:{MORADO};background:{FONDO[MORADO]}'>"
+                   f"<h4 style='color:{MORADO}'>Con la plataforma</h4><div class='big'>{con}</div>"
+                   f"<div class='rai-nota'>{titulo}</div></div>", unsafe_allow_html=True)
+        if nota:
+            st.caption(nota)
+
+    def teoria(texto):
+        st.markdown(f"<div class='rai-nota' style='margin-top:14px'>Σ <b>Teoría:</b> {texto}</div>",
+                    unsafe_allow_html=True)
+
+    def p_portada():
+        st.markdown(f"Este recorrido muestra, **semana a semana**, cómo funciona la plataforma en un "
+                    f"semestre simulado de **{S['perfiles']} estudiantes** de un(a) {conf['nombre'].lower()}, "
+                    "y qué cambia frente al **mismo semestre sin ella**.")
+        st.markdown(f"- 🏛️ **{conf['unidad_apoyo']}** administra la plataforma.\n"
+                    "- 1 · **Apoyo académico**: el docente sabe a tiempo y recibe herramientas.\n"
+                    "- 2 · **Integración**: actividades por intereses, abiertas a todos.\n"
+                    "- 3 · **Comunidad docente**: nadie enfrenta los retos solo.")
+        st.info("Usa **Siguiente →** para avanzar en el tiempo.")
+
+    def p_matricula():
+        k = st.columns(3)
+        k[0].metric("Perfiles creados", S["perfiles"])
+        k[1].metric("Declaran alguna necesidad", S["con_necesidad"])
+        k[2].metric("Autorizan compartir sus ajustes", S["con_consentimiento"])
+        st.markdown("Al matricularse, **todos** los estudiantes llenan un perfil corto: cómo aprenden "
+                    "mejor y qué les interesa. Quien tiene alguna necesidad la registra **una sola vez** "
+                    f"en {conf['unidad_apoyo']} y decide si autoriza compartir los ajustes con sus docentes.")
+        teoria("conjuntos. E = estudiantes, N = con necesidad, V = con consentimiento; V ⊆ N ⊆ E.")
+
+    def p_primer_dia():
+        comparar("de las parejas estudiante–curso con necesidad que el docente conoce el primer día",
+                 pct(S["informados_sin"]), pct(S["informados_con"]),
+                 f"Sin la plataforma, el docente solo se entera si el estudiante se lo cuenta "
+                 f"(supuesto: {sup['auto']} %). Con ella, se entera siempre que haya consentimiento.")
+        teoria("lógica proposicional. El docente ve el indicador ● si y solo si p ∧ q ∧ r "
+               "(inscrito, con necesidad y con consentimiento).")
+
+    def p_planeacion():
+        k = st.columns(3)
+        k[0].metric("Cursos con estudiantes con apoyo", S["cursos_con_apoyo"])
+        k[1].metric("Actividades de integración", S["actividades"])
+        k[2].metric("Franjas horarias necesarias", S["franjas"])
+        st.markdown("Los docentes revisan las **necesidades comunes** de su clase y sus herramientas, "
+                    f"y piden un espacio de planeación con {conf['unidad_apoyo']}. La red de docentes "
+                    "sugiere a quién invitar. A la vez se programan las actividades por intereses.")
+        teoria("grafos y centralidad (a quién convocar) y coloración de grafos "
+               f"({S['actividades']} actividades caben en χ = {S['franjas']} franjas).")
+
+    def p_integracion():
+        comparar("estudiantes sin ningún compañero de trabajo (grado 0)",
+                 S["aislados_antes"], S["aislados_despues"],
+                 "Las actividades por intereses crean conexiones nuevas sin hacer grupos aparte.")
+        teoria("vértices de grado 0 en el grafo de compañeros, antes y después.")
+
+    def p_corte1():
+        comparar("alertas tempranas de estudiantes con apoyo y nota < 3,0",
+                 "0", S["alertas_corte1"],
+                 "Sin la plataforma, nadie conecta la nota con la necesidad del estudiante hasta el final. "
+                 f"Con ella, {conf['unidad_apoyo']} recibe la alerta sola y hace seguimiento.")
+        teoria("alerta ↔ apoyo ∧ (nota < 3,0).")
+
+    def p_corte2():
+        comparar("aprobación de estudiantes con necesidad (nota final ≥ 3,0)",
+                 pct(S["aprob_sin"]), pct(S["aprob_con"]),
+                 f"Referencia: el resto de estudiantes aprueba el {pct(S['aprob_resto'])}.")
+        fig = go.Figure(go.Bar(
+            x=["Con necesidad · sin plataforma", "Con necesidad · con plataforma", "Resto de estudiantes"],
+            y=[S["aprob_sin"] * 100, S["aprob_con"] * 100, S["aprob_resto"] * 100],
+            marker_color=[GRIS, MORADO, "#CBD5E1"],
+            text=[pct(S["aprob_sin"]), pct(S["aprob_con"]), pct(S["aprob_resto"])],
+            textposition="outside", cliponaxis=False))
+        fig.update_layout(height=300, plot_bgcolor="white", margin=dict(l=10, r=10, t=10, b=10),
+                          yaxis=dict(range=[0, 100], title="% aprobación"))
+        st.plotly_chart(fig, width="stretch")
+
+    def p_impacto():
+        tabla([
+            {"Indicador": "Docentes que conocen las necesidades el primer día",
+             "Sin": pct(S["informados_sin"]), "Con": pct(S["informados_con"])},
+            {"Indicador": "Franjas para las actividades", "Sin": S["actividades"], "Con": S["franjas"]},
+            {"Indicador": "Estudiantes aislados", "Sin": S["aislados_antes"], "Con": S["aislados_despues"]},
+            {"Indicador": "Alertas a mitad de semestre", "Sin": 0, "Con": S["alertas_corte1"]},
+            {"Indicador": "Aprobación de estudiantes con necesidad",
+             "Sin": pct(S["aprob_sin"]), "Con": pct(S["aprob_con"])},
+            {"Indicador": "Brecha frente al resto (puntos)",
+             "Sin": f"{(S['aprob_resto'] - S['aprob_sin']) * 100:.0f}",
+             "Con": f"{(S['aprob_resto'] - S['aprob_con']) * 100:.0f}"},
+        ])
+        st.caption("Impacto ESPERADO según una simulación. Para medirlo de verdad se necesita un piloto.")
+        with st.expander("Ajustar los supuestos"):
+            auto = st.slider("Sin plataforma: % de veces que el estudiante le cuenta al docente",
+                             0, 100, sup["auto"])
+            aj = st.slider("Mejora de nota cuando el docente adapta la clase", 0.0, 1.0, sup["ajustes"], 0.1)
+            sg = st.slider("Mejora adicional por seguimiento tras la alerta", 0.0, 1.0, sup["seguimiento"], 0.1)
+            if (auto, aj, sg) != (sup["auto"], sup["ajustes"], sup["seguimiento"]):
+                st.session_state["supuestos"] = {"auto": auto, "ajustes": aj, "seguimiento": sg}
+                st.rerun()
+
+    PAGINAS = [("Antes de empezar", "Un semestre con RAI", p_portada),
+               ("Semana 0", "Matrícula: cada estudiante crea su perfil", p_matricula),
+               ("Semana 1", "Primer día de clase", p_primer_dia),
+               ("Semana 3", "Planear la clase y las actividades", p_planeacion),
+               ("Semana 6", "Integración", p_integracion),
+               ("Semana 8", "Primer corte de notas", p_corte1),
+               ("Semana 12", "Segundo corte: tres meses después", p_corte2),
+               ("Cierre", "Impacto esperado", p_impacto)]
+    i = min(st.session_state["pag"], len(PAGINAS) - 1)
+    cuando, titulo, pintar = PAGINAS[i]
+    st.progress(i / (len(PAGINAS) - 1), text=f"{cuando} · página {i + 1} de {len(PAGINAS)}")
+    st.title(titulo)
+    pintar()
+    st.write("")
+    a, _, b = st.columns([1, 2, 1])
+    if a.button("← Anterior", disabled=i == 0, width="stretch"):
+        st.session_state["pag"] = i - 1
+        st.rerun()
+    if b.button("Siguiente →", disabled=i == len(PAGINAS) - 1, type="primary", width="stretch"):
+        st.session_state["pag"] = i + 1
+        st.rerun()
+
+
 # ================================================================ RAÍZ: Bienestar
-if pagina == RAMAS[0]:
+elif pagina == RAMAS[1]:
     st.title(conf["unidad_apoyo"])
     st.caption(f"Inicio de semestre simulado · {len(est)} estudiantes · {len(cursos)} cursos · "
                f"{len(docentes)} docentes")
@@ -209,7 +352,7 @@ if pagina == RAMAS[0]:
 
 
 # ================================================================ 1. Apoyo académico
-elif pagina == RAMAS[1]:
+elif pagina == RAMAS[2]:
     doc_id = st.selectbox("Docente", sorted(docentes), format_func=nombre_doc.get,
                           label_visibility="collapsed")
     st.title(f"Hola, {nombre_doc[doc_id]}")
@@ -282,7 +425,7 @@ elif pagina == RAMAS[1]:
 
 
 # ================================================================ 2. Integración
-elif pagina == RAMAS[2]:
+elif pagina == RAMAS[3]:
     st.title("Integración")
     st.caption("Actividades presenciales por intereses, abiertas a todos. No son grupos aparte.")
     k = st.columns(3)
@@ -335,7 +478,7 @@ elif pagina == RAMAS[2]:
 
 
 # ================================================================ 3. Comunidad docente
-elif pagina == RAMAS[3]:
+elif pagina == RAMAS[4]:
     st.title("Comunidad docente")
     st.caption("Un espacio para hablar de lo que pasa en clase. Nadie enfrenta los retos solo.")
     izq, der = st.columns([3, 2])
@@ -379,7 +522,7 @@ elif pagina == RAMAS[3]:
 
 
 # ================================================================ Pruebas
-elif pagina == RAMAS[4]:
+elif pagina == RAMAS[5]:
     st.title("Pruebas con resultado conocido")
     import tests.test_casos_conocidos as T
     with open(os.devnull, "w") as nulo:
@@ -403,3 +546,10 @@ elif pagina == RAMAS[4]:
         color = G.coloracion_welsh_powell(g)
         dibujar_grafo(g, colores_discretos={v: PALETA[c] for v, c in color.items()}, alto=320)
         st.markdown(f"χ esperado = 3 · obtenido = **{G.numero_cromatico_exacto(g)}**")
+
+
+# ================================================================ Guía del equipo
+elif pagina == GUIA:
+    ruta = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs", "GUIA_DEL_EQUIPO.md")
+    with open(ruta, encoding="utf-8") as f:
+        st.markdown(f.read())

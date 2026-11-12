@@ -9,6 +9,7 @@ from rai.grafos import (Grafo, aislados, cercania, coloracion_welsh_powell,
                         componentes_conexas, es_coloracion_valida, grado,
                         intermediacion, numero_cromatico_exacto)
 from rai.modelo import alertas, lista_curso, mostrar_ajuste, necesidades_comunes, panel_curso
+from rai.semestre import simular_semestre
 from rai.simulacion import simular
 
 
@@ -118,6 +119,20 @@ class CasoNecesidadesComunes(unittest.TestCase):
         lista = lista_curso(datos, "C1")
         self.assertEqual([f["id"] for f in lista if f["apoyo"]], ["E1", "E2"])
         self.assertEqual([a["id"] for a in alertas(datos)], ["E1"])
+
+
+class CasoSemestre(unittest.TestCase):
+    def test_sin_efecto_no_hay_diferencia(self):
+        # Si los ajustes no tuvieran efecto, con y sin plataforma darían lo mismo.
+        d = simular("universidad", 300, semilla=3)
+        r = simular_semestre(d, efecto_ajustes=0, efecto_seguimiento=0)
+        self.assertAlmostEqual(r["aprob_sin"], r["aprob_con"])
+
+    def test_con_efecto_la_plataforma_no_empeora(self):
+        d = simular("universidad", 300, semilla=3)
+        r = simular_semestre(d)
+        self.assertGreaterEqual(r["aprob_con"], r["aprob_sin"])
+        self.assertGreater(r["informados_con"], r["informados_sin"])
 
 
 class CasoSimulacion(unittest.TestCase):

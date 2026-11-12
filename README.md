@@ -19,6 +19,9 @@ matemático.
 
 Los algoritmos de grafos están implementados por el grupo, sin librerías de grafos.
 
+> 📘 **Integrantes:** lean primero [docs/GUIA_DEL_EQUIPO.md](docs/GUIA_DEL_EQUIPO.md): explica la
+> teoría de cada pantalla, dónde está el código y cómo cambiarlo.
+
 ## Instalación
 
 Requiere Python 3.10 o superior.
@@ -39,11 +42,13 @@ La aplicación sigue un árbol: la unidad de apoyo es la raíz y tiene tres rama
 
 | Vista | Para quién | Qué hace |
 |---|---|---|
+| 📖 **Recorrido del semestre** | Presentación | Libro que avanza de la matrícula a la semana 12 y compara el semestre sin y con la plataforma (impacto esperado) |
 | 🏛️ **Inicio** | Bienestar / Orientación | Resumen de las tres ramas, alertas de mitad de semestre y solicitudes de planeación |
 | **1 · Apoyo académico** | Docente | Cuántos estudiantes tienen apoyo, necesidades comunes con herramientas, lista de clase con indicador ● y nota de corte, botón para planear en persona |
 | **2 · Integración** | Bienestar | Horario de actividades por intereses (coloración) y estudiantes que siguen aislados |
 | **3 · Comunidad docente** | Docentes | Foro con opción anónima, mentores sugeridos y colegas por invitar |
 | ✓ **Pruebas** | Sustentación | Casos con resultado conocido |
+| 📘 **Guía del equipo** | Integrantes | Cómo se aplica la teoría en cada parte y cómo modificarla |
 
 El docente no llena nada extra: las notas de corte llegan del sistema académico (simuladas) y la
 alerta a la unidad de apoyo es automática (`apoyo ∧ nota < 3,0`). Cada rama tiene un desplegable
@@ -93,6 +98,7 @@ rai/catalogo.py        categorías, ajustes, herramientas, intereses, tipos de i
 rai/simulacion.py      simulación del inicio de semestre
 rai/grafos.py          algoritmos de grafos
 rai/modelo.py          conjuntos, lógica y construcción de los grafos
+rai/semestre.py        recorrido del semestre: sin y con la plataforma
 tests/                 pruebas con resultado conocido
 docs/                  informe técnico (LaTeX/PDF) y propuesta
 data/                  CSV de ejemplo (semilla 42, 450 perfiles)
