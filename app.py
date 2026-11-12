@@ -12,7 +12,7 @@ import streamlit as st
 
 from rai import grafos as G
 from rai import modelo as M
-from rai.catalogo import CATEGORIAS, FRANJAS, INSTITUCIONES
+from rai.catalogo import CATEGORIAS, FRANJAS, INSTITUCIONES, NECESIDADES_COMUNES
 from rai.simulacion import simular
 
 MORADO, AZUL, VERDE, NARANJA, GRIS = "#7C3AED", "#2563EB", "#059669", "#D97706", "#64748B"
@@ -29,6 +29,8 @@ st.markdown("""
 .rai-tabla th {text-align:left;border-bottom:2px solid #CBD5E1;padding:6px 8px;color:#334155}
 .rai-tabla td {border-bottom:1px solid #E2E8F0;padding:6px 8px;vertical-align:top}
 .rai-nota {color:#64748B;font-size:0.85rem}
+.rai-hero {background:#F5F3FF;border-left:6px solid #7C3AED;border-radius:10px;padding:18px 22px;font-size:1.25rem;margin:8px 0 18px}
+.rai-num {font-size:2.4rem;font-weight:700;color:#7C3AED;margin-right:6px}
 </style>""", unsafe_allow_html=True)
 
 
@@ -120,6 +122,7 @@ nombre_curso = {c["id"]: f'{c["asignatura"]} ({c["grupo"]})' for c in datos["cur
 visibles = M.visibles(datos)
 miembros = M.miembros_por_curso(datos)
 st.session_state.setdefault("observaciones", [])
+st.session_state.setdefault("solicitudes", [])
 
 
 # ---------------------------------------------------------------- 1. Panorama
@@ -150,6 +153,13 @@ if pagina == "Panorama":
         tabla(filas)
         st.caption("Con ajustes = |C_k ∩ V|: grado del curso en el grafo bipartito estudiantes–cursos.")
 
+    st.subheader("Solicitudes de planeación")
+    sol = st.session_state["solicitudes"]
+    if sol:
+        tabla(sol)
+    else:
+        st.info("Aún no hay solicitudes. Los docentes las envían desde su panel con «Planear».")
+
     st.subheader("Observaciones recibidas de docentes")
     obs = st.session_state["observaciones"]
     if obs:
@@ -163,53 +173,57 @@ if pagina == "Panorama":
 
 # ---------------------------------------------------------------- 2. Panel docente
 elif pagina == "Panel docente":
-    st.title("Panel docente")
-    doc_id = st.selectbox("Docente", sorted(docentes), format_func=lambda d: docentes[d]["nombre"])
+    doc_id = st.selectbox("Docente", sorted(docentes), format_func=lambda d: docentes[d]["nombre"],
+                          label_visibility="collapsed")
+    st.title(f"Hola, {docentes[doc_id]['nombre']}")
     mis_cursos = sorted(c for c in cursos if cursos[c]["docente_id"] == doc_id)
-    g_colab = M.grafo_colaboracion(datos)
     gd = M.grafo_docentes(datos, umbral=2)
 
-    for c in mis_cursos:
-        p = M.panel_curso(datos, c, g_colab)
-        st.markdown(f"### {nombre_curso[c]}")
-        k = st.columns(4)
-        k[0].metric("Estudiantes", p["total"])
-        k[1].metric("Con ajustes recomendados", p["con_ajustes"])
-        k[2].metric("Categorías presentes", len(p["por_categoria"]))
-        k[3].metric("Sin grupo de trabajo", len(p["aislados"]))
-        if p["por_categoria"]:
-            st.markdown("".join(f"<span class='rai-chip'>{CATEGORIAS[cat]['nombre']}: {num}</span>"
-                                for cat, num in p["por_categoria"].most_common()), unsafe_allow_html=True)
-        izq, der = st.columns([3, 2])
-        with izq:
-            with st.expander(f"Ajustes por estudiante ({p['con_ajustes']})"):
-                tabla(p["lista"])
-            with st.expander("Herramientas y guías para las categorías de este curso"):
-                for cat in p["por_categoria"]:
-                    st.markdown(f"**{CATEGORIAS[cat]['nombre']}**")
-                    for h in CATEGORIAS[cat]["herramientas"]:
-                        st.markdown(f"- {h}")
-            if p["aislados"]:
-                st.warning("Estudiantes sin grupo de trabajo en este curso: " + ", ".join(p["aislados"]))
-        with der:
-            st.caption("Cómo aprende mejor el grupo (perfil de TODOS los estudiantes)")
-            et = p["estilos"].most_common()
-            barras([e for e, _ in et], [v for _, v in et], VERDE, alto=200, horizontal=True)
-        st.divider()
+    for tab, c in zip(st.tabs([nombre_curso[c] for c in mis_cursos]), mis_cursos):
+        with tab:
+            p = M.panel_curso(datos, c)
+            # 1) Una sola cifra, sin nombres.
+            if p["con_apoyo"] == 0:
+                st.markdown(f"<div class='rai-hero'><b>Ningún estudiante</b> de este curso ha registrado "
+                            f"necesidades de apoyo.</div>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<div class='rai-hero'><span class='rai-num'>{M.cifra_visible(p['con_apoyo'])}</span>"
+                            f" de {p['total']} estudiantes necesitan algún apoyo</div>", unsafe_allow_html=True)
 
-    vecinos = sorted(gd.vecinos(doc_id), key=lambda d: -gd.adj[doc_id][d])
-    if vecinos:
-        st.markdown("**Coordina con** (comparten estudiantes con ajustes): " +
-                    ", ".join(f"{docentes[d]['nombre']} ({gd.adj[doc_id][d]})" for d in vecinos[:5]))
+            # 2) Necesidades comunes, cada una con sus herramientas.
+            if p["por_necesidad"]:
+                st.markdown("#### Necesidades comunes en tu clase")
+                orden = sorted(p["por_necesidad"], key=lambda n: -p["por_necesidad"][n])
+                for col, n in zip(st.columns(len(orden)), orden):
+                    nec = NECESIDADES_COMUNES[n]
+                    with col.container(border=True):
+                        st.markdown(f"<div style='font-size:1.6rem'>{nec['icono']}</div>"
+                                    f"<b>{nec['nombre']}</b><br>"
+                                    f"<span class='rai-nota'>{M.cifra_visible(p['por_necesidad'][n])} "
+                                    f"estudiantes</span>", unsafe_allow_html=True)
+                        with st.popover("Herramientas", width="stretch"):
+                            for h in nec["herramientas"]:
+                                st.markdown(f"- {h}")
 
-    with st.form("obs", clear_on_submit=True):
-        st.markdown("#### Enviar observación a " + conf["unidad_apoyo"])
-        curso_obs = st.selectbox("Curso", mis_cursos, format_func=lambda c: nombre_curso[c])
-        texto = st.text_area("Observación (sin datos de salud)", max_chars=400)
-        if st.form_submit_button("Enviar") and texto.strip():
-            st.session_state["observaciones"].append(
-                {"Docente": docentes[doc_id]["nombre"], "Curso": nombre_curso[curso_obs], "Observación": texto})
-            st.success("Observación enviada.")
+            # 3) Una acción principal: planear en persona.
+            st.write("")
+            a, b = st.columns([1, 1])
+            if a.button("📅 Planear con " + conf["unidad_apoyo"], key=f"plan-{c}", type="primary",
+                        width="stretch"):
+                vecinos = sorted(gd.vecinos(doc_id), key=lambda d: -gd.adj[doc_id][d])[:3]
+                st.session_state["solicitudes"].append(
+                    {"Docente": docentes[doc_id]["nombre"], "Curso": nombre_curso[c],
+                     "Necesidades": ", ".join(NECESIDADES_COMUNES[n]["nombre"] for n in p["por_necesidad"]),
+                     "Invitar también a": ", ".join(docentes[d]["nombre"] for d in vecinos)})
+                st.success("Solicitud enviada. " + conf["unidad_apoyo"] + " te contactará para reunirse."
+                           + (" Sugerimos invitar a: " + ", ".join(docentes[d]["nombre"] for d in vecinos)
+                              + ", que comparten estudiantes contigo." if vecinos else ""))
+            with b.popover("💬 Enviar una observación", width="stretch"):
+                texto = st.text_area("¿Cómo va el grupo? (sin datos de salud)", key=f"txt-{c}", max_chars=400)
+                if st.button("Enviar", key=f"obs-{c}") and texto.strip():
+                    st.session_state["observaciones"].append(
+                        {"Docente": docentes[doc_id]["nombre"], "Curso": nombre_curso[c], "Observación": texto})
+                    st.success("Observación enviada.")
 
 
 # ---------------------------------------------------------------- 3. Centralidad

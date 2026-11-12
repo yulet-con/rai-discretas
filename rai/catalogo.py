@@ -48,6 +48,49 @@ CATEGORIAS = {
     },
 }
 
+# Lo que ve el docente: NECESIDADES COMUNES (qué hacer distinto en clase), no categorías.
+# Función categoría -> necesidades comunes; un estudiante cuenta una sola vez por necesidad.
+NECESIDADES_COMUNES = {
+    "tiempo": {
+        "nombre": "Tiempo y ritmo", "icono": "⏱️",
+        "de": ["cognitiva", "motriz"],
+        "herramientas": ["Da tiempo adicional en evaluaciones y talleres",
+                         "Divide la clase en bloques cortos con pausas",
+                         "Permite entregar por partes"],
+    },
+    "informacion": {
+        "nombre": "Acceso a la información", "icono": "👁️",
+        "de": ["visual", "auditiva"],
+        "herramientas": ["Comparte el material antes de clase en formato digital",
+                         "Usa letra grande y buen contraste en diapositivas",
+                         "Activa subtítulos en videos y di en voz alta lo que escribes"],
+    },
+    "instrucciones": {
+        "nombre": "Instrucciones claras", "icono": "📝",
+        "de": ["cognitiva", "auditiva"],
+        "herramientas": ["Deja las instrucciones también por escrito",
+                         "Explica paso a paso con un ejemplo resuelto",
+                         "Verifica que se entendió antes de empezar la actividad"],
+    },
+    "clima": {
+        "nombre": "Clima y anticipación", "icono": "🤝",
+        "de": ["psicosocial"],
+        "herramientas": ["Anuncia con anticipación fechas y cambios",
+                         "Ofrece un canal privado para comunicar dificultades",
+                         "Permite pausas breves si alguien las necesita"],
+    },
+    "espacio": {
+        "nombre": "Acceso físico", "icono": "♿",
+        "de": ["motriz"],
+        "herramientas": ["Verifica que el salón y los laboratorios sean accesibles",
+                         "Deja libre el paso y un puesto cerca de la entrada",
+                         "Acepta entregas digitales"],
+    },
+}
+
+# Con menos de este número de estudiantes no se muestra la cifra exacta (privacidad).
+MINIMO_PARA_MOSTRAR = 3
+
 # Probabilidad relativa de cada categoría entre quienes tienen alguna necesidad
 # (supuesto de la simulación; se justifica en el informe).
 PESO_CATEGORIA = {"cognitiva": 0.40, "psicosocial": 0.25, "visual": 0.13,

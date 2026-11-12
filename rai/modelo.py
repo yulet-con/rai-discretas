@@ -2,7 +2,7 @@
 from collections import Counter
 from itertools import combinations
 
-from .catalogo import CATEGORIAS
+from .catalogo import MINIMO_PARA_MOSTRAR, NECESIDADES_COMUNES
 from .grafos import Grafo
 
 
@@ -113,24 +113,30 @@ def subgrafo(g, vertices):
 
 
 # ---------------------------------------------------------------- paneles
-def panel_curso(datos, curso_id, g_colab=None):
-    """Lo que ve el docente de un curso: conteos por categoría y ajustes, sin diagnósticos."""
+def necesidades_comunes(categorias):
+    """Función f: conjunto de categorías -> conjunto de necesidades comunes."""
+    return {n for n, d in NECESIDADES_COMUNES.items() if set(d["de"]) & set(categorias)}
+
+
+def cifra_visible(k):
+    """Privacidad: con menos de MINIMO_PARA_MOSTRAR estudiantes no se da la cifra exacta."""
+    if k == 0:
+        return "0"
+    return str(k) if k >= MINIMO_PARA_MOSTRAR else f"menos de {MINIMO_PARA_MOSTRAR}"
+
+
+def panel_curso(datos, curso_id):
+    """Lo que ve el docente de un curso: solo cifras agregadas, sin nombres ni diagnósticos.
+
+    Para cada necesidad común n: |C_k ∩ V ∩ f⁻¹(n)|. Un estudiante con varias
+    categorías cuenta una sola vez en cada necesidad (unión de conjuntos).
+    """
     est = {e["id"]: e for e in datos["estudiantes"]}
     miembros = miembros_por_curso(datos).get(curso_id, set())
     vis = visibles(datos) & miembros
-    conteo = Counter()
-    lista = []
-    for e in sorted(vis):
-        cats = necesidades_de(est[e])
-        conteo.update(cats)
-        ajustes = [a for c in cats for a in CATEGORIAS[c]["ajustes"]]
-        lista.append({"Estudiante": est[e]["nombre"],
-                      "Categorías": ", ".join(CATEGORIAS[c]["nombre"] for c in cats),
-                      "Ajustes recomendados": " · ".join(ajustes)})
-    estilos = Counter(est[m]["estilo_aprendizaje"] for m in miembros)
-    aislados_curso = []
-    if g_colab is not None:
-        sg = subgrafo(g_colab, miembros)
-        aislados_curso = [est[v]["nombre"] for v in sg.vertices() if not sg.adj[v]]
-    return {"total": len(miembros), "con_ajustes": len(vis), "por_categoria": conteo,
-            "lista": lista, "estilos": estilos, "aislados": aislados_curso}
+    por_necesidad = {n: set() for n in NECESIDADES_COMUNES}
+    for e in vis:
+        for n in necesidades_comunes(necesidades_de(est[e])):
+            por_necesidad[n].add(e)
+    return {"total": len(miembros), "con_apoyo": len(vis),
+            "por_necesidad": {n: len(s) for n, s in por_necesidad.items() if s}}

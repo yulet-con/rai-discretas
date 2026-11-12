@@ -11,7 +11,7 @@ matemático.
 
 | Parte | Teoría | Dónde está |
 |---|---|---|
-| Necesidades por curso | Conjuntos, inclusión-exclusión | `rai/modelo.py` |
+| Necesidades comunes por curso (sin nombres) | Conjuntos, unión, función categoría → necesidad | `rai/modelo.py` |
 | Regla de privacidad `s ↔ (p ∧ q ∧ r)` | Lógica proposicional | `rai/modelo.py` |
 | Cursos y docentes que priorizar | Grafos, grado, cercanía, intermediación (Brandes) | `rai/grafos.py` |
 | Horario de actividades de integración | Coloración (Welsh–Powell) y número cromático exacto | `rai/grafos.py` |
@@ -39,7 +39,8 @@ En la barra lateral se elige el tipo de institución, el número de perfiles (30
 porcentaje con alguna necesidad de apoyo y la semilla. Vistas:
 
 1. **Panorama**: indicadores para la unidad de apoyo y cursos que priorizar.
-2. **Panel docente**: lo que ve cada docente de sus cursos, herramientas y observaciones.
+2. **Panel docente**: por curso, una sola cifra (cuántos necesitan apoyo, sin nombres), las
+   necesidades comunes con sus herramientas y el botón para planear en persona con la unidad de apoyo.
 3. **Red de cursos y docentes**: grafo, centralidades y coordinador sugerido.
 4. **Actividades de integración**: grafo de choques, coloración y horario.
 5. **Integración social**: estudiantes aislados antes y después de las actividades.
