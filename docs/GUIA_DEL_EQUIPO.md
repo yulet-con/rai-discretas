@@ -230,24 +230,36 @@ Cada integrante explica su parte con el **ejemplo pequeño** de esta guía y lue
 
 ## 11. Trabajar con Git sin pisarse
 
+**Regla del equipo:** todos trabajamos en la rama **`prueba`**. La rama **`main`** es la versión
+final que se entrega y **solo la actualiza la dueña del repositorio**, uniendo `prueba` cuando
+todo funciona. Nadie hace `push` a `main`.
+
+Al clonar, Git ya los deja en `prueba` (es la rama principal del repositorio). Para confirmarlo:
+
+```bash
+git branch --show-current
+```
+debe decir `prueba`.
+
+Antes de empezar, traer lo último:
+
 ```bash
 git pull
 ```
-antes de empezar, para traer lo último.
 
-```bash
-git checkout -b mi-cambio
-```
-para trabajar en una rama propia.
+Antes de subir, correr las pruebas:
 
 ```bash
 python -m unittest -v
 ```
-antes de subir.
+
+Subir los cambios a `prueba`:
 
 ```bash
 git add -A
 git commit -m "Qué cambié"
-git push -u origin mi-cambio
+git push
 ```
-y luego abrir un *pull request* en GitHub para que otro integrante lo revise.
+
+Si `git push` dice que hay cambios nuevos de otra persona, hagan `git pull`, revisen que todo
+funcione y vuelvan a hacer `git push`.

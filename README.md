@@ -22,6 +22,9 @@ Los algoritmos de grafos están implementados por el grupo, sin librerías de gr
 > 📘 **Integrantes:** lean primero [docs/GUIA_DEL_EQUIPO.md](docs/GUIA_DEL_EQUIPO.md): explica la
 > teoría de cada pantalla, dónde está el código y cómo cambiarlo.
 
+> 🌿 **Ramas:** se trabaja en **`prueba`** (rama principal). **`main`** es la versión final y solo
+> la actualiza la dueña del repositorio. Ver la sección 11 de la guía.
+
 ## Instalación
 
 Requiere Python 3.10 o superior.
