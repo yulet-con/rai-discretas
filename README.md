@@ -46,7 +46,7 @@ La aplicación sigue un árbol: la unidad de apoyo es la raíz y tiene tres rama
 | Vista | Para quién | Qué hace |
 |---|---|---|
 | 📖 **Recorrido del semestre** | Presentación | Libro que avanza de la matrícula a la semana 12 y compara el semestre sin y con la plataforma (impacto esperado) |
-| 🏛️ **Inicio** | Bienestar / Orientación | Resumen de las tres ramas, alertas de mitad de semestre y solicitudes de planeación |
+| 🏛️ **Bienestar** | Bienestar / Orientación | Resumen de las tres ramas, alertas de mitad de semestre y solicitudes de planeación |
 | **1 · Apoyo académico** | Docente | Cuántos estudiantes tienen apoyo, necesidades comunes con herramientas, lista de clase con indicador ● y nota de corte, botón para planear en persona |
 | **2 · Integración** | Bienestar | Horario de actividades por intereses (coloración) y estudiantes que siguen aislados |
 | **3 · Comunidad docente** | Docentes | Foro con opción anónima, mentores sugeridos y colegas por invitar |

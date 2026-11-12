@@ -106,7 +106,7 @@ def datos_simulados(tipo, n, prop, semilla):
 
 # ---------------------------------------------------------------- barra lateral
 LIBRO, GUIA = "📖 Recorrido del semestre", "📘 Guía del equipo"
-RAMAS = [LIBRO, "🏛️ Inicio", "1 · Apoyo académico", "2 · Integración", "3 · Comunidad docente",
+RAMAS = [LIBRO, "🏛️ Bienestar", "1 · Apoyo académico", "2 · Integración", "3 · Comunidad docente",
          "✓ Pruebas", GUIA]
 with st.sidebar:
     st.markdown(f"<h2 style='color:{MORADO};margin-bottom:0'>RAI</h2>"

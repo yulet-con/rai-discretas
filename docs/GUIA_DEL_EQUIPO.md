@@ -87,7 +87,7 @@ mismo resultado (lo comprueba la prueba `test_sin_efecto_no_hay_diferencia`).
 
 ---
 
-## 5. 🏛️ Inicio · Bienestar (la raíz)
+## 5. 🏛️ Bienestar (la raíz)
 
 **Qué ve el usuario.** Tres tarjetas, una por rama; las alertas de mitad de semestre y las
 solicitudes de planeación.
