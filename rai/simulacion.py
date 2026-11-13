@@ -11,12 +11,15 @@ Supuestos de la simulación (se justifican en el informe):
   quienes tienen una necesidad de apoyo (barreras de participación).
 - Nota de mitad de semestre (escala 0-5): normal con media 3,6 y desviación 0,7;
   media 3,1 para quienes tienen una necesidad de apoyo (aún sin ajustes en clase).
+- Encuesta de perfil (todos): respuesta 1-5; si la pregunta se relaciona con una
+  categoría del estudiante, suele responder 4 o 5; si no, suele responder 1 a 3.
+- El programa académico autoriza los ajustes de quien da consentimiento (100 %).
 """
 import csv
 import os
 import random
 
-from .catalogo import CATEGORIAS, ESTILOS, INSTITUCIONES, INTERESES, PESO_CATEGORIA
+from .catalogo import CATEGORIAS, ENCUESTA, ESTILOS, INSTITUCIONES, INTERESES, PESO_CATEGORIA
 
 NOMBRES = ["Ana", "Luis", "María", "Carlos", "Laura", "Andrés", "Valentina", "Juan",
            "Camila", "Santiago", "Daniela", "Sebastián", "Sofía", "Mateo", "Isabella",
@@ -27,6 +30,7 @@ APELLIDOS = ["Pérez", "Gómez", "Rodríguez", "Martínez", "López", "García",
              "Jiménez", "Mendoza", "Silva", "Ruiz", "Navarro", "Charris", "Barrios", "Polo"]
 
 PROB_CONSENTIMIENTO = 0.85
+PROB_AUTORIZACION = 1.0   # el programa académico autoriza los ajustes (supuesto ajustable)
 
 
 def _nombre(rng):
@@ -142,6 +146,16 @@ def simular(tipo="universidad", n_estudiantes=450, prop_necesidad=0.12, semilla=
             if rng.random() < (0.65 if e["tiende_solo"] else 0.8):
                 participaciones.append({"estudiante_id": e["id"], "actividad": interes})
 
+    # ---------------- encuesta de perfil (TODOS) y autorización del programa (a)
+    # Generador aparte para no alterar el resto de la simulación.
+    rng_perfil = random.Random(semilla + 2)
+    for e in estudiantes:
+        cats = set(c for c in e["necesidades"].split(";") if c)
+        for item in ENCUESTA:
+            relacionada = bool(cats & set(item["de"]))
+            e[item["clave"]] = rng_perfil.choice([3, 4, 5, 5] if relacionada else [1, 2, 2, 3, 3, 4])
+        e["ajuste_autorizado"] = e["consentimiento"] and rng_perfil.random() < PROB_AUTORIZACION
+
     # ---------------- notas de mitad de semestre (llegan del sistema académico)
     # Generador aparte para no alterar el resto de la simulación.
     rng_notas = random.Random(semilla + 1)
@@ -178,13 +192,30 @@ def guardar_csv(datos, carpeta):
 
 def cargar_csv(carpeta):
     """Entrada: lee los CSV de una carpeta (generados por simular o reales)."""
-    datos = {}
+    textos = {}
     for nombre in TABLAS:
-        with open(os.path.join(carpeta, f"{nombre}.csv"), newline="", encoding="utf-8") as f:
-            datos[nombre] = list(csv.DictReader(f))
+        with open(os.path.join(carpeta, f"{nombre}.csv"), encoding="utf-8") as f:
+            textos[nombre] = f.read()
+    return cargar_textos(textos)
+
+
+def faltantes(nombres_archivo):
+    """Tablas que faltan entre los archivos subidos (por nombre, sin la extensión .csv)."""
+    tengo = {n.lower().removesuffix(".csv") for n in nombres_archivo}
+    return [t for t in TABLAS if t not in tengo]
+
+
+def cargar_textos(textos):
+    """Entrada desde texto CSV (por ejemplo, archivos subidos en la app): {tabla: texto}."""
+    import io
+    datos = {n: list(csv.DictReader(io.StringIO(textos[n]))) for n in TABLAS}
     for e in datos["estudiantes"]:
         for col in ("consentimiento", "tiende_solo"):
             e[col] = str(e[col]).strip().lower() == "true"
+        # Archivos sin la columna: se supone que el programa autorizó los ajustes.
+        e["ajuste_autorizado"] = str(e.get("ajuste_autorizado", e["consentimiento"])).strip().lower() == "true"
+        for item in ENCUESTA:
+            e[item["clave"]] = int(e.get(item["clave"]) or 3)
     for ins in datos["inscripciones"]:
         ins["nota_corte1"] = float(ins["nota_corte1"])
     return datos

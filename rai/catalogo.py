@@ -88,6 +88,22 @@ NECESIDADES_COMUNES = {
     },
 }
 
+# Encuesta de perfil que responden TODOS los estudiantes al iniciar el semestre
+# (escala 1 a 5; 4 o 5 = "de acuerdo"). Propuesta: la deben validar los especialistas
+# de Bienestar. Cada pregunta apunta a una necesidad común, sin pedir diagnósticos.
+ENCUESTA = [
+    {"clave": "p_escrito", "pregunta": "Entiendo mejor cuando las instrucciones están por escrito",
+     "necesidad": "instrucciones", "de": ["cognitiva", "auditiva"]},
+    {"clave": "p_tiempo", "pregunta": "En las evaluaciones suelo necesitar más tiempo",
+     "necesidad": "tiempo", "de": ["cognitiva", "motriz"]},
+    {"clave": "p_bloques", "pregunta": "Me concentro mejor en bloques cortos",
+     "necesidad": "tiempo", "de": ["cognitiva"]},
+    {"clave": "p_anticipacion", "pregunta": "Me ayuda saber con anticipación los cambios de fechas",
+     "necesidad": "clima", "de": ["psicosocial"]},
+    {"clave": "p_material", "pregunta": "Necesito el material antes de clase o en formato digital",
+     "necesidad": "informacion", "de": ["visual", "auditiva"]},
+]
+
 # Probabilidad relativa de cada categoría entre quienes tienen alguna necesidad
 # (supuesto de la simulación; se justifica en el informe).
 PESO_CATEGORIA = {"cognitiva": 0.40, "psicosocial": 0.25, "visual": 0.13,

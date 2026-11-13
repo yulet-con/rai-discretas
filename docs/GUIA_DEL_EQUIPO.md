@@ -12,9 +12,9 @@ todo el proyecto, no solo su parte.
 |---|---|---|
 | `rai/catalogo.py` | Textos fijos: categorías, necesidades comunes, herramientas, intereses, franjas, tipo de institución | — |
 | `rai/simulacion.py` | Crea el inicio de semestre: 300–600 perfiles, cursos, docentes, notas | Probabilidad (supuestos) |
-| `rai/grafos.py` | Los algoritmos: grado, cercanía, intermediación, coloración, aislados | **Grafos** |
-| `rai/modelo.py` | Arma conjuntos y grafos con los datos; reglas de privacidad y alertas | **Conjuntos, lógica, grafos** |
-| `rai/semestre.py` | Recorrido del semestre: compara sin y con la plataforma | Simulación |
+| `rai/grafos.py` | Los algoritmos: grado, cercanía, intermediación (Brandes), componentes, aislados | **Grafos y análisis de redes** |
+| `rai/modelo.py` | Encuesta de perfil, conjuntos, reglas de privacidad y alertas, grafos | **Conjuntos, álgebra booleana, redes** |
+| `rai/semestre.py` | El mismo semestre con el proceso actual y con RAI | Simulación |
 | `app.py` | Todo lo que se ve en pantalla | — |
 | `tests/test_casos_conocidos.py` | Pruebas con resultado conocido | Validación |
 
@@ -31,7 +31,8 @@ fórmula, la cambian en `rai/`; si cambian un texto o un color, lo cambian en `a
 - **Camino más corto** entre u y v: el que usa menos aristas. Su longitud es la **distancia** d(u, v).
 - **Cercanía** de v: (n − 1) / Σ d(v, u). Más alta = está más "cerca" de todos.
 - **Intermediación** de v: cuántos caminos más cortos entre otros pares pasan por v. Más alta = v es un **puente**.
-- **Coloración propia**: dar un color a cada vértice de modo que dos vértices unidos tengan colores distintos.
+- **Componente conexa**: grupo de vértices conectados entre sí y separados del resto.
+- **Álgebra booleana**: variables que valen 1 (verdadero) o 0 (falso); `·` es AND (las dos), `+` es OR (alguna).
 - **Número cromático** χ(G): el mínimo de colores posible.
 - **Vértice aislado**: grado 0.
 
@@ -45,8 +46,9 @@ fórmula, la cambian en `rai/`; si cambian un texto o un color, lo cambian en `a
 colegios, de menores de edad. El curso permite una simulación justificada.
 
 **Supuestos** (están en el encabezado de `rai/simulacion.py`):
-- 12 % declara alguna necesidad (se cambia en ⚙️ Simulación).
-- 85 % de ellos da consentimiento.
+- Todos responden la encuesta de perfil (5 preguntas, escala 1 a 5).
+- 12 % tiene alguna necesidad registrada en el proceso existente (se cambia en «Entrada de datos»).
+- 85 % de ellos da consentimiento; el programa académico autoriza sus ajustes (100 %, ajustable).
 - Nota de corte 1: media 3,6; media 3,1 para quien tiene alguna necesidad.
 
 **Semilla.** El mismo número de semilla produce exactamente los mismos datos. Así cualquiera puede
@@ -63,27 +65,34 @@ medir el impacto real se necesita un piloto.
 
 ---
 
-## 4. 📖 Recorrido del semestre (el "libro")
+## 4. ▶ Iniciar semestre (la demostración)
 
-**Qué ve el usuario.** Páginas que avanzan en el tiempo: matrícula → primer día → planeación →
-integración → primer corte → segundo corte → impacto esperado. Cada página compara **sin** y
-**con** la plataforma.
+**Qué ve el usuario.** Una ventana con la **entrada de datos** (generar 300–600 perfiles o cargar los
+6 archivos CSV), el botón **▶ Iniciar semestre** y una línea de tiempo de 7 etapas que se recorre
+con **Siguiente etapa »**. Cada etapa dice qué teoría usa (Σ).
 
-**Cómo funciona** (`rai/semestre.py`, función `simular_semestre`):
-- Sin plataforma, el docente se entera solo si el estudiante se lo cuenta (30 % por defecto).
-- Con plataforma, se entera siempre que haya consentimiento.
-- En el segundo corte, la nota sube un poco si el docente sabía (+0,4) y otro poco si hubo alerta y
-  seguimiento (+0,3). La variación aleatoria es **la misma** en los dos escenarios: la única
-  diferencia es la plataforma.
-- Nota final = promedio de los dos cortes. Aprueba si es ≥ 3,0.
+| Etapa | Qué pasa | Teoría |
+|---|---|---|
+| Semana 0 · Encuestas | Llegan las encuestas de **todos**; % de acuerdo por pregunta | Conjuntos (E = todos) |
+| Semana 0 · Cruce | Se cruza con el proceso existente: q, r, a | **Álgebra booleana**: ● = p·q·r·a |
+| Semana 1 · Paneles | Proceso actual vs. RAI; ejemplo de panel | Funciones |
+| Semanas 2–3 · Planeación | Solicitudes, red de docentes, mentores | **Análisis de redes** |
+| Semana 6 · Integración | Aislados y grupos separados, antes y después | Grado 0 y componentes |
+| Semana 8 · Primer corte | Alertas por curso | **Álgebra booleana**: alerta = ●·t |
+| Semana 12 · Resultados | Proceso actual vs. RAI; supuestos ajustables | Simulación |
 
-**Cómo cambiarlo**
-- Los tres supuestos se cambian en la última página, en "Ajustar los supuestos".
-- Agregar una página → en `app.py`, escribir una función `p_algo()` y agregarla a la lista `PAGINAS`.
+**Cómo funciona el cálculo de impacto** (`rai/semestre.py`, `simular_semestre`):
+- Proceso actual: el docente conoce a tiempo la necesidad en el 30 % de los casos (supuesto).
+- Con RAI: la conoce siempre que haya consentimiento y ajuste autorizado.
+- Segundo corte: la nota sube +0,4 si el docente adaptó la clase y +0,3 si hubo alerta y seguimiento.
+  La variación aleatoria es **la misma** en los dos escenarios.
 
-**Pregunta probable:** *"¿Cómo saben que la mejora es por la plataforma?"* → Porque en la
-simulación todo lo demás es idéntico; si los efectos se ponen en 0, los dos escenarios dan el
-mismo resultado (lo comprueba la prueba `test_sin_efecto_no_hay_diferencia`).
+**Cargar datos propios.** `python generar_datos.py` crea los 6 CSV de ejemplo en `data/`. En la
+ventana se elige «Cargar archivos CSV» y se suben los 6 juntos.
+
+**Pregunta probable:** *"¿Cómo saben que la mejora es por RAI?"* → Porque todo lo demás es
+idéntico; si los efectos se ponen en 0, los dos escenarios dan lo mismo (prueba
+`test_sin_efecto_no_hay_diferencia`).
 
 ---
 
@@ -114,14 +123,15 @@ unidos con todos y la centralidad no distingue nada. El umbral deja solo las con
 
 **Qué ve el usuario.**
 1. Cuántos estudiantes de su curso tienen apoyo registrado.
-2. Las **necesidades comunes** (tiempo y ritmo, acceso a la información…) con sus herramientas.
-3. La **lista de clase** con el indicador ● y la nota del primer corte.
-4. Los botones "Planear con Bienestar" y "Enviar observación".
+2. **Cómo aprende su grupo**: el % de acuerdo de todo el curso en cada pregunta de la encuesta.
+3. Las **necesidades comunes** (tiempo y ritmo, acceso a la información…) con sus herramientas.
+4. La **lista de clase** con el indicador ● y la nota del primer corte.
+5. Los botones "Planear con Bienestar" y "Enviar observación".
 
-**Teoría 1: lógica proposicional (privacidad).**
-p = está inscrito, q = tiene necesidad registrada, r = dio consentimiento.
-El indicador ● aparece si y solo si **p ∧ q ∧ r**. En la tabla de verdad solo 1 de las 8
-combinaciones es verdadera. → `modelo.mostrar_ajuste`, `modelo.visibles`.
+**Teoría 1: álgebra booleana (privacidad).**
+p = está inscrito, q = tiene necesidad registrada, r = dio consentimiento este semestre,
+a = el programa académico autorizó los ajustes. El indicador es **● = p · q · r · a** (AND).
+En la tabla de verdad solo 1 de las 16 combinaciones da 1. → `modelo.mostrar_ajuste`, `modelo.visibles`.
 
 **Teoría 2: conjuntos y funciones (necesidades comunes).**
 - f: categoría → necesidades comunes. Ejemplo: cognitiva → {tiempo, instrucciones}.
@@ -129,8 +139,8 @@ combinaciones es verdadera. → `modelo.mostrar_ajuste`, `modelo.visibles`.
 - Es una **unión**: un estudiante con dos categorías que llevan a la misma necesidad cuenta una sola vez.
 → `modelo.necesidades_comunes`, `modelo.panel_curso`.
 
-**Teoría 3: lógica (alerta automática).**
-alerta ↔ apoyo ∧ (nota < 3,0). El docente no llena nada: la alerta llega sola a Bienestar.
+**Teoría 3: álgebra booleana (alerta automática).**
+alerta = ● · t, con t = (nota < 3,0). El docente no llena nada: la alerta llega sola a Bienestar.
 → `modelo.lista_curso`, `modelo.alertas`.
 
 **Teoría 4: grafo de docentes.** "Planear" sugiere invitar a los **vecinos** del docente en el
@@ -159,31 +169,23 @@ con consentimiento y no dice qué necesidad tiene. Lo individual se trata en per
 
 ## 7. 2 · Integración
 
-**Qué ve el usuario.** Número de actividades, franjas necesarias, aislados; el horario propuesto
-y quiénes siguen aislados.
+**Qué ve el usuario.** Actividades por intereses (abiertas a todos) con sus inscritos, cuántos
+estudiantes siguen aislados y quiénes son.
 
-**Teoría 1: coloración de grafos (horario).**
-- Vértice = actividad. Arista = dos actividades comparten 8 o más estudiantes (choque).
-- Color = franja horaria. Dos actividades unidas no pueden ir a la misma hora.
-- **Welsh–Powell**: ordenar por grado de mayor a menor y dar a cada una el menor color libre.
-  Es rápido pero no siempre óptimo.
-- **χ exacto**: se prueba con 1, 2, 3… colores por retroceso hasta que alcance. Sirve para
-  comprobar el voraz en grafos pequeños.
-→ `grafos.coloracion_welsh_powell`, `grafos.numero_cromatico_exacto`.
+**Teoría: análisis de redes en el grafo de compañeros.**
+- Vértice = estudiante (**todos**, no solo quien tiene apoyo). Arista = trabajaron juntos o
+  comparten una actividad.
+- **Grado 0** = aislado. **Componente conexa** = grupo que no se comunica con los demás.
+- Se compara antes y después de las actividades. → `modelo.grafo_colaboracion`,
+  `grafos.aislados`, `grafos.componentes_conexas`.
 
-**Ejemplo pequeño (caso 2).** Fútbol–Música, Música–Ajedrez → χ = 2 (Fútbol y Ajedrez juntos).
-Si se agrega Teatro unido a Fútbol y a Música → triángulo → χ = 3.
+**Ejemplo pequeño (caso de prueba 2).** Compañeros A–B–C y D–E, y F solo: 3 componentes y F
+aislado. Si F se une a una actividad con E, F deja de estar aislado y quedan 2 componentes.
 
-**Teoría 2: grado 0 (aislamiento).**
-Grafo de compañeros: vértice = estudiante, arista = trabajaron juntos. Grado 0 = aislado.
-Se compara antes y después de las actividades. → `modelo.grafo_colaboracion`, `grafos.aislados`.
+**Cómo cambiarlo.** Actividades → `INTERESES` en `rai/catalogo.py`.
 
-**Cómo cambiarlo**
-- Umbral de choque → `UMBRAL_ACTIVIDADES` en `app.py` (o el deslizador del desplegable).
-- Actividades → `INTERESES` en `rai/catalogo.py`. Horarios → `FRANJAS`.
-
-**Pregunta probable:** *"¿Por qué no usan siempre χ exacto?"* → Calcular χ es un problema
-NP-difícil: con muchas actividades tarda demasiado. El voraz da una buena respuesta rápida.
+**Pregunta probable:** *"¿Por qué no un grupo para personas con discapacidad?"* → Porque separa.
+La red es de todos y cada quien llega por lo que le gusta.
 
 ---
 
@@ -214,9 +216,11 @@ está abierta (no hay base de datos). Es trabajo futuro.
 | Prueba | Qué comprueba |
 |---|---|
 | Estrella | grado, cercanía e intermediación calculados a mano |
-| Camino y triángulo | χ = 2 y χ = 3 |
+| Red de compañeros | F aislado y 3 componentes; una actividad lo integra |
 | Aislamiento | grado 0 y componentes conexas |
-| Tabla de verdad | solo p = q = r = V muestra el ●|
+| Tabla de verdad | ● = p·q·r·a: solo 1 de 16 combinaciones |
+| Sin autorización | sin `a` no aparece el ● |
+| Encuesta para todos | necesidades y % del grupo sin diagnóstico |
 | Necesidades comunes | un estudiante cuenta una vez por necesidad |
 | Alerta | solo apoyo con consentimiento y nota < 3,0 |
 | Semestre | sin efecto no hay diferencia; con efecto la plataforma no empeora |
@@ -230,9 +234,9 @@ está abierta (no hay base de datos). Es trabajo futuro.
 
 | Integrante | Parte que domina a fondo | Archivos |
 |---|---|---|
-| 1 | Problema, impacto y recorrido del semestre | `semestre.py`, página 📖 |
-| 2 | Conjuntos y lógica: privacidad, necesidades comunes, alertas | `modelo.py`, rama 1 |
-| 3 | Coloración y aislamiento | `grafos.py` (coloración), rama 2 |
+| 1 | Problema, impacto y la ventana ▶ Iniciar semestre | `semestre.py`, `simulacion.py` |
+| 2 | Conjuntos y álgebra booleana: encuesta, privacidad, alertas | `modelo.py`, rama 1 |
+| 3 | Red de compañeros: grado 0 y componentes | `grafos.py`, rama 2 |
 | 4 | Centralidad y Brandes | `grafos.py` (centralidad), Inicio y rama 3 |
 
 Cada integrante explica su parte con el **ejemplo pequeño** de esta guía y luego la muestra en la app.

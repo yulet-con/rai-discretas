@@ -5,10 +5,9 @@ Ejecutar desde la raíz del proyecto:  python -m unittest -v
 import unittest
 from itertools import product
 
-from rai.grafos import (Grafo, aislados, cercania, coloracion_welsh_powell,
-                        componentes_conexas, es_coloracion_valida, grado,
-                        intermediacion, numero_cromatico_exacto)
-from rai.modelo import alertas, lista_curso, mostrar_ajuste, necesidades_comunes, panel_curso
+from rai.grafos import Grafo, aislados, cercania, componentes_conexas, grado, intermediacion
+from rai.modelo import (alertas, lista_curso, mostrar_ajuste, necesidades_comunes,
+                        necesidades_por_perfil, panel_curso, perfil_grupo, visibles)
 from rai.semestre import simular_semestre
 from rai.simulacion import simular
 
@@ -37,26 +36,26 @@ class CasoCentralidad(unittest.TestCase):
         self.assertAlmostEqual(intermediacion(estrella(), normalizada=True)["B"], 1.0)
 
 
-class CasoColoracion(unittest.TestCase):
-    def camino(self):
-        g = Grafo(["Fútbol", "Música", "Ajedrez"])
-        g.agregar_arista("Fútbol", "Música")
-        g.agregar_arista("Música", "Ajedrez")
-        return g
+def dos_grupos():
+    """Caso 2: dos grupos de compañeros (A-B-C y D-E) y un estudiante solo (F)."""
+    g = Grafo("ABCDEF")
+    g.agregar_arista("A", "B")
+    g.agregar_arista("B", "C")
+    g.agregar_arista("D", "E")
+    return g
 
-    def test_camino_chi_2(self):
-        g = self.camino()
-        color = coloracion_welsh_powell(g)
-        self.assertTrue(es_coloracion_valida(g, color))
-        self.assertEqual(len(set(color.values())), 2)
-        self.assertEqual(numero_cromatico_exacto(g), 2)
 
-    def test_triangulo_chi_3(self):
-        g = self.camino()
-        g.agregar_arista("Teatro", "Fútbol")
-        g.agregar_arista("Teatro", "Música")
-        self.assertEqual(numero_cromatico_exacto(g), 3)
-        self.assertEqual(len(set(coloracion_welsh_powell(g).values())), 3)
+class CasoRedDeCompaneros(unittest.TestCase):
+    def test_componentes_y_aislado(self):
+        g = dos_grupos()
+        self.assertEqual(aislados(g), ["F"])
+        self.assertEqual(sorted(len(c) for c in componentes_conexas(g)), [1, 2, 3])
+
+    def test_una_actividad_lo_integra(self):
+        g = dos_grupos()
+        g.agregar_arista("F", "E")    # F se une a una actividad con E
+        self.assertEqual(aislados(g), [])
+        self.assertEqual(len(componentes_conexas(g)), 2)
 
 
 class CasoAislamiento(unittest.TestCase):
@@ -69,9 +68,27 @@ class CasoAislamiento(unittest.TestCase):
 
 class CasoPrivacidad(unittest.TestCase):
     def test_tabla_de_verdad(self):
-        # s solo es verdadero en 1 de las 8 combinaciones: p = q = r = V.
-        verdaderos = [c for c in product([True, False], repeat=3) if mostrar_ajuste(*c)]
-        self.assertEqual(verdaderos, [(True, True, True)])
+        # ● = p·q·r·a es verdadero en 1 de las 16 combinaciones: p = q = r = a = 1.
+        verdaderos = [c for c in product([True, False], repeat=4) if mostrar_ajuste(*c)]
+        self.assertEqual(verdaderos, [(True, True, True, True)])
+
+    def test_sin_autorizacion_no_hay_indicador(self):
+        datos = {"estudiantes": [
+            {"id": "E1", "necesidades": "visual", "consentimiento": True, "ajuste_autorizado": True},
+            {"id": "E2", "necesidades": "visual", "consentimiento": True, "ajuste_autorizado": False},
+            {"id": "E3", "necesidades": "visual", "consentimiento": False, "ajuste_autorizado": False}]}
+        self.assertEqual(visibles(datos), {"E1"})
+
+
+class CasoEncuestaParaTodos(unittest.TestCase):
+    def test_perfil_sin_diagnostico(self):
+        # Respuestas 4 o 5 = de acuerdo. E1 pide instrucciones por escrito y más tiempo.
+        e1 = {"id": "E1", "p_escrito": 5, "p_tiempo": 4, "p_bloques": 2, "p_anticipacion": 1, "p_material": 3}
+        e2 = {"id": "E2", "p_escrito": 2, "p_tiempo": 1, "p_bloques": 1, "p_anticipacion": 5, "p_material": 2}
+        self.assertEqual(necesidades_por_perfil(e1), {"instrucciones", "tiempo"})
+        perfil = {f["pregunta"][:20]: f["porcentaje"] for f in perfil_grupo({"estudiantes": [e1, e2]})}
+        self.assertEqual(perfil["Entiendo mejor cuand"], 0.5)
+        self.assertEqual(perfil["Me ayuda saber con a"], 0.5)
 
 
 class CasoNecesidadesComunes(unittest.TestCase):

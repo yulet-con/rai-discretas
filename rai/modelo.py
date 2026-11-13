@@ -1,16 +1,17 @@
-"""Modelo: aplica la teoría (conjuntos, lógica, grafos) sobre los datos simulados."""
+"""Modelo: aplica la teoría (conjuntos, álgebra booleana, análisis de redes) sobre los datos."""
 from collections import Counter
 from itertools import combinations
 
-from .catalogo import NECESIDADES_COMUNES
+from .catalogo import ENCUESTA, NECESIDADES_COMUNES
 from .grafos import Grafo
 
 
-# ---------------------------------------------------------------- lógica
-def mostrar_ajuste(p, q, r):
-    """Regla de privacidad: s <-> (p ∧ q ∧ r).
-    p: inscrito en el curso, q: tiene necesidad registrada, r: hay consentimiento."""
-    return p and q and r
+# ---------------------------------------------------------------- álgebra booleana
+def mostrar_ajuste(p, q, r, a=True):
+    """Regla de privacidad: ● = p · q · r · a  (AND de cuatro variables).
+    p: inscrito en el curso, q: tiene necesidad registrada,
+    r: dio consentimiento este semestre, a: el programa académico autorizó los ajustes."""
+    return p and q and r and a
 
 
 # ---------------------------------------------------------------- conjuntos
@@ -19,9 +20,27 @@ def necesidades_de(est_row):
 
 
 def visibles(datos):
-    """Conjunto de estudiantes cuyos ajustes pueden mostrarse (q ∧ r)."""
+    """V: estudiantes cuyos ajustes pueden mostrarse (q · r · a)."""
     return {e["id"] for e in datos["estudiantes"]
-            if mostrar_ajuste(True, bool(necesidades_de(e)), bool(e["consentimiento"]))}
+            if mostrar_ajuste(True, bool(necesidades_de(e)), bool(e["consentimiento"]),
+                              bool(e.get("ajuste_autorizado", e["consentimiento"])))}
+
+
+DE_ACUERDO = 4   # respuesta 4 o 5 en la escala 1-5
+
+
+def perfil_grupo(datos, miembros=None):
+    """Perfil de TODOS (capa 1): % de estudiantes de acuerdo con cada pregunta de la encuesta.
+    No identifica a nadie: solo porcentajes del grupo."""
+    est = [e for e in datos["estudiantes"] if miembros is None or e["id"] in miembros]
+    n = len(est) or 1
+    return [{"pregunta": it["pregunta"], "necesidad": it["necesidad"],
+             "porcentaje": sum(int(e[it["clave"]]) >= DE_ACUERDO for e in est) / n} for it in ENCUESTA]
+
+
+def necesidades_por_perfil(est_row):
+    """Necesidades comunes que surgen de la encuesta, sin diagnóstico."""
+    return {it["necesidad"] for it in ENCUESTA if int(est_row[it["clave"]]) >= DE_ACUERDO}
 
 
 def miembros_por_curso(datos):
@@ -72,21 +91,16 @@ def grafo_docentes(datos, umbral=1):
     return g
 
 
-def grafo_actividades(datos, umbral=5):
-    """Vértice = actividad. Arista (choque) si comparten al menos `umbral` participantes."""
+def participantes(datos):
+    """Actividad de integración -> conjunto de estudiantes inscritos (abiertas a todos)."""
     part = {}
     for r in datos["participaciones"]:
         part.setdefault(r["actividad"], set()).add(r["estudiante_id"])
-    g = Grafo(sorted(part))
-    for a, b in combinations(sorted(part), 2):
-        comunes = len(part[a] & part[b])
-        if comunes >= umbral:
-            g.agregar_arista(a, b, comunes)
-    return g, part
+    return part
 
 
 def grafo_colaboracion(datos, con_actividades=False, semilla=7):
-    """Vértice = estudiante. Arista si trabajaron juntos.
+    """Vértice = estudiante (TODOS). Arista si trabajaron juntos.
     Con actividades: se agregan conexiones entre quienes comparten una actividad."""
     import random
     g = Grafo(e["id"] for e in datos["estudiantes"])
@@ -94,7 +108,7 @@ def grafo_colaboracion(datos, con_actividades=False, semilla=7):
         g.agregar_arista(r["estudiante_a"], r["estudiante_b"])
     if con_actividades:
         rng = random.Random(semilla)
-        _, part = grafo_actividades(datos, umbral=1)
+        part = participantes(datos)
         for act in sorted(part):
             miembros = sorted(part[act])
             for e in miembros:          # cada participante conoce a ~2 personas nuevas

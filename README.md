@@ -12,9 +12,9 @@ matemático.
 | Parte | Teoría | Dónde está |
 |---|---|---|
 | Necesidades comunes por curso (sin nombres) | Conjuntos, unión, función categoría → necesidad | `rai/modelo.py` |
-| Regla de privacidad `s ↔ (p ∧ q ∧ r)` y alerta `apoyo ∧ nota < 3,0` | Lógica proposicional | `rai/modelo.py` |
+| Encuesta de perfil para todos | Conjuntos | `rai/modelo.py` |
+| Indicador `● = p·q·r·a` y alerta `● · (nota < 3,0)` | Álgebra booleana | `rai/modelo.py` |
 | Cursos y docentes que priorizar | Grafos, grado, cercanía, intermediación (Brandes) | `rai/grafos.py` |
-| Horario de actividades de integración | Coloración (Welsh–Powell) y número cromático exacto | `rai/grafos.py` |
 | Estudiantes aislados antes y después | Vértices de grado 0, componentes conexas | `rai/grafos.py` |
 
 Los algoritmos de grafos están implementados por el grupo, sin librerías de grafos.
@@ -45,19 +45,19 @@ La aplicación sigue un árbol: la unidad de apoyo es la raíz y tiene tres rama
 
 | Vista | Para quién | Qué hace |
 |---|---|---|
-| 📖 **Recorrido del semestre** | Presentación | Libro que avanza de la matrícula a la semana 12 y compara el semestre sin y con la plataforma (impacto esperado) |
+| ▶ **Iniciar semestre** | Demostración | Entrada masiva de encuestas (300–600 perfiles o CSV) y recorrido en 7 etapas de la semana 0 a la 12, con el proceso actual frente a RAI |
 | 🏛️ **Bienestar** | Bienestar / Orientación | Resumen de las tres ramas, alertas de mitad de semestre y solicitudes de planeación |
 | **1 · Apoyo académico** | Docente | Cuántos estudiantes tienen apoyo, necesidades comunes con herramientas, lista de clase con indicador ● y nota de corte, botón para planear en persona |
-| **2 · Integración** | Bienestar | Horario de actividades por intereses (coloración) y estudiantes que siguen aislados |
+| **2 · Integración** | Bienestar | Actividades por intereses abiertas a todos y estudiantes que siguen aislados |
 | **3 · Comunidad docente** | Docentes | Foro con opción anónima, mentores sugeridos y colegas por invitar |
 | ✓ **Pruebas** | Sustentación | Casos con resultado conocido |
 | 📘 **Guía del equipo** | Integrantes | Cómo se aplica la teoría en cada parte y cómo modificarla |
 
 El docente no llena nada extra: las notas de corte llegan del sistema académico (simuladas) y la
-alerta a la unidad de apoyo es automática (`apoyo ∧ nota < 3,0`). Cada rama tiene un desplegable
+alerta a la unidad de apoyo es automática (`● · nota < 3,0`). Cada rama tiene un desplegable
 **Σ Cómo funciona** con los grafos y las medidas para la sustentación. Los parámetros de la
-simulación (institución, 300–600 perfiles, porcentaje con necesidad, semilla) están en
-**⚙️ Simulación** en la barra lateral.
+simulación (institución, 300–600 perfiles, porcentaje con necesidad, semilla) o la carga de CSV
+están en **Entrada de datos**, dentro de ▶ Iniciar semestre.
 
 **Generar los datos como CSV** (entrada/salida reproducible):
 
@@ -78,9 +78,9 @@ python -m unittest -v
 | Caso | Resultado esperado |
 |---|---|
 | Estrella A–B, B–C, B–D | grado(B)=3, cercanía(B)=1, cercanía(hojas)=0,6, intermediación(B)=3 |
-| Camino Fútbol–Música–Ajedrez | χ = 2 |
-| Camino + Teatro (triángulo) | χ = 3 |
-| Tabla de verdad de la privacidad | solo p = q = r = V muestra el ajuste |
+| Red de compañeros A–B–C, D–E y F | F aislado, 3 componentes; una actividad lo integra |
+| Tabla de verdad `● = p·q·r·a` | solo 1 de 16 combinaciones muestra el ● |
+| Encuesta para todos | necesidades y % del grupo sin diagnóstico |
 | Agrupación en necesidades comunes | un estudiante cuenta una vez por necesidad |
 | Alerta de mitad de semestre | solo apoyo con consentimiento y nota < 3,0 |
 | Simulación | 300–600 perfiles, misma semilla → mismos datos |
@@ -100,8 +100,8 @@ generar_datos.py       genera los CSV
 rai/catalogo.py        categorías, ajustes, herramientas, intereses, tipos de institución
 rai/simulacion.py      simulación del inicio de semestre
 rai/grafos.py          algoritmos de grafos
-rai/modelo.py          conjuntos, lógica y construcción de los grafos
-rai/semestre.py        recorrido del semestre: sin y con la plataforma
+rai/modelo.py          encuesta, conjuntos, álgebra booleana y construcción de los grafos
+rai/semestre.py        el mismo semestre con el proceso actual y con RAI
 tests/                 pruebas con resultado conocido
 docs/                  informe técnico (LaTeX/PDF) y propuesta
 data/                  CSV de ejemplo (semilla 42, 450 perfiles)
