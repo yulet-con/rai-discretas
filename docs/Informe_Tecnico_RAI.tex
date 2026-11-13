@@ -1,7 +1,9 @@
 % =====================================================================
 %  Informe técnico - Proyecto Final Matemáticas Discretas (MAT 4021)
 %  Red de Apoyo Inclusivo (RAI) para universidades y colegios
-%  Compilar en Overleaf con pdfLaTeX.
+%  Compilar con pdfLaTeX (MiKTeX, TeX Live u Overleaf), dos veces.
+%  Todos los números de resultados salen del ejecutable con la
+%  configuración: universidad, 450 perfiles, 12 %, semilla 42.
 % =====================================================================
 \documentclass[12pt,letterpaper]{article}
 
@@ -26,27 +28,31 @@
 
 \definecolor{morado}{HTML}{7C3AED}
 \definecolor{azul}{HTML}{2563EB}
+\definecolor{verde}{HTML}{059669}
 \definecolor{naranja}{HTML}{D97706}
 \definecolor{gris}{HTML}{64748B}
 
-\onehalfspacing
+\setstretch{1.25}
 \setlength{\parskip}{4pt}
+\setlist{nosep}
+\captionsetup{font=small}
 
 % Marcador para lo que el grupo debe completar
 \newcommand{\completar}[1]{\textcolor{red}{\textbf{[#1]}}}
+\newcommand{\codigo}[1]{\texttt{#1}}
 
 \begin{document}
 
 % ------------------------------------------------------------- Portada
 \begin{titlepage}
 \centering
-\vspace*{2cm}
+\vspace*{1.5cm}
 {\Large Universidad del Norte\par}
 {\large Matemáticas Discretas (MAT 4021)\par}
 \vspace{2.5cm}
 {\LARGE\bfseries Red de Apoyo Inclusivo (RAI)\par}
 \vspace{0.4cm}
-{\Large Modelación con teoría de grafos de una plataforma de apoyo docente para la inclusión en universidades y colegios\par}
+{\Large Una plataforma para planear la inclusión antes de la primera nota, modelada con conjuntos, lógica y teoría de grafos\par}
 \vspace{0.6cm}
 {\large Informe técnico del prototipo\par}
 \vfill
@@ -62,11 +68,10 @@ Mari \completar{apellido}\\
 
 % ------------------------------------------------------------- Resumen
 \section*{Resumen}
-En las instituciones educativas, los docentes suelen enterarse de que un estudiante tenía una condición o dificultad que afectaba su aprendizaje cuando ya reprobó la asignatura, o no se enteran nunca. El apoyo depende de que el estudiante lo solicite, y muchos prefieren callar por temor al estigma. Este proyecto propone la \emph{Red de Apoyo Inclusivo} (RAI), una plataforma administrada por la unidad de apoyo de la institución (Bienestar Universitario u Orientación Escolar) que informa a cada docente, antes de iniciar clases, qué necesidades de apoyo existen en sus cursos, sin revelar diagnósticos. El problema se modela con teoría de conjuntos, lógica proposicional y teoría de grafos: las medidas de centralidad (grado, cercanía e intermediación) indican qué cursos y docentes priorizar; la coloración de grafos determina el mínimo de franjas horarias para actividades de integración sin conflictos; y los vértices de grado cero identifican personas aisladas. Se desarrolló un prototipo ejecutable que funciona tanto para universidades como para colegios mediante un parámetro de configuración, validado con casos de resultado conocido y con datos simulados cuya justificación es la protección de datos sensibles.
+En la universidad y en el colegio, los docentes suelen enterarse de que un estudiante tenía una condición o dificultad que afectaba su aprendizaje cuando ya perdió la asignatura, o no se enteran nunca. El apoyo depende de que el estudiante lo pida a cada docente, y muchos prefieren callar. Los sistemas de alerta que ya existen reaccionan cuando el promedio ya bajó. Este proyecto propone la \emph{Red de Apoyo Inclusivo} (RAI), una plataforma administrada por la unidad de apoyo (Bienestar Universitario u Orientación Escolar) con tres ramas: apoyo académico, integración y comunidad docente. Su objetivo es \emph{prevenir}: que el docente sepa desde la primera semana cuántos estudiantes de su curso necesitan apoyo y qué necesidades comunes tienen, sin conocer diagnósticos, y que planee su clase antes de la primera nota. El problema se modela con conjuntos y funciones (necesidades comunes), lógica proposicional (privacidad y alertas) y teoría de grafos: centralidad para decidir qué cursos priorizar y a quién convocar, coloración para programar actividades de integración y vértices de grado cero para detectar aislamiento. Se construyó un prototipo ejecutable propio en Python, validado con 13 pruebas de resultado conocido y con una simulación de un semestre de 300 a 600 perfiles. En la simulación de referencia, la proporción de docentes que conocen las necesidades de su curso el primer día pasa de 32\,\% a 84\,\%, los estudiantes aislados bajan de 14 a 2 y la aprobación esperada de los estudiantes con alguna necesidad sube de 61\,\% a 72\,\%.
 
-\noindent\textbf{Palabras clave:} inclusión educativa, teoría de grafos, centralidad, coloración de grafos, ajustes razonables.
+\noindent\textbf{Palabras clave:} inclusión educativa, teoría de grafos, centralidad, coloración de grafos, lógica proposicional.
 
-\newpage
 \tableofcontents
 \newpage
 
@@ -74,124 +79,130 @@ En las instituciones educativas, los docentes suelen enterarse de que un estudia
 \section{Introducción}
 
 \subsection{Planteamiento del problema}
-Un docente planifica sus clases y evaluaciones sin saber, en la mayoría de los casos, si entre sus estudiantes hay personas con dificultades visuales, auditivas, motrices, cognitivas o psicosociales. El sistema actual depende de que el estudiante solicite apoyo a cada docente, lo cual tiene tres consecuencias:
-\begin{enumerate}[nosep]
-  \item El docente se entera tarde (después de la pérdida de la asignatura) o nunca.
-  \item Muchos estudiantes no comunican su situación por miedo al estigma.
-  \item El docente, aun cuando conoce la situación, no siempre cuenta con herramientas ni con una comunidad que lo acompañe.
-\end{enumerate}
-La propuesta no busca dar un trato especial al estudiante, sino que el docente pueda planificar sus actividades teniendo en cuenta las capacidades reales de su grupo, lo que beneficia tanto el éxito del estudiante como la evaluación justa de sus capacidades.
+Un docente planea sus clases y evaluaciones sin saber si entre sus estudiantes hay personas con dificultades visuales, auditivas, motrices, cognitivas o psicosociales. Hoy el apoyo depende de que el estudiante lo pida a cada docente, lo que produce tres efectos: el docente se entera tarde o nunca; muchos estudiantes no comunican su situación por temor al estigma; y el docente, aun cuando sabe, no siempre tiene herramientas ni colegas con quienes hablarlo.
+
+Las instituciones ya cuentan con alertas académicas que avisan a la unidad de apoyo cuando el promedio de un estudiante baja mucho. Esas alertas son \emph{reactivas}: llegan cuando el semestre ya está en riesgo y no dicen en qué curso ni por qué. La propuesta no busca dar un trato especial, sino que el docente pueda \emph{planear} con información real desde el inicio, lo que beneficia el éxito del estudiante y una evaluación justa de sus capacidades.
 
 \subsection{Justificación del impacto}
-El enunciado del proyecto exige que el problema afecte a alguien, tenga evidencia, sea medible y sea modelable. La Tabla~\ref{tab:impacto} resume cómo se cumple cada condición.
+La Tabla~\ref{tab:impacto} responde las cuatro condiciones de impacto del proyecto.
 
 \begin{table}[H]
 \centering
 \caption{Condiciones de impacto del problema}
 \label{tab:impacto}
 \small
-\begin{tabularx}{\textwidth}{>{\bfseries}p{2.8cm}X}
+\begin{tabularx}{\textwidth}{>{\bfseries}p{2.6cm}X}
 \toprule
 Condición & Respuesta \\
 \midrule
-Afecta a alguien & Estudiantes con discapacidad o dificultades de aprendizaje y sus docentes. En educación básica y media, 200.334 estudiantes con discapacidad están matriculados en educación regular (SIMAT 2023, citado en Portafolio, s.f.). En educación superior, el SNIES reportaba en 2020 cerca de 18.789 estudiantes con discapacidad, menos del 0,6\,\% de la matrícula (Fundación Saldarriaga Concha, 2023). \\
-Hay evidencia & Según el DANE (ENCV 2020), solo 17 de cada 100 personas con discapacidad llegan a la educación superior (Portafolio, s.f.). La baja proporción frente a la población con discapacidad sugiere barreras de acceso y permanencia. El Ministerio de Educación lanzó en 2026 una estrategia con más de 120 instituciones para garantizar acceso, permanencia y graduación (Ministerio de Educación Nacional, 2026). \\
-Se puede mejorar & Indicadores medibles antes y después: porcentaje de docentes que conocen las necesidades de su curso antes de clase, número de franjas horarias y conflictos de las actividades de integración, y número de personas aisladas (grado cero) en la red del curso (Sección~\ref{sec:resultados}). \\
-Se puede modelar & Conjuntos (necesidades), lógica proposicional (reglas de privacidad), grafos y medidas de centralidad (priorización), coloración de grafos (horarios) (Sección~\ref{sec:modelo}). \\
+Afecta a alguien & Estudiantes con discapacidad o dificultades de aprendizaje, y sus docentes. En educación básica y media hay 200.334 estudiantes con discapacidad en educación regular (SIMAT 2023, citado en Portafolio, s.f.). En educación superior, el SNIES reportaba en 2020 cerca de 18.789 estudiantes con discapacidad, menos del 0,6\,\% de la matrícula (Fundación Saldarriaga Concha, 2023). \\
+Hay evidencia & Según el DANE (ENCV 2020), solo 17 de cada 100 personas con discapacidad llegan a la educación superior (Portafolio, s.f.). El Ministerio de Educación Nacional (2026) lanzó una estrategia con más de 120 instituciones para mejorar el acceso, la permanencia y la graduación de esta población. \\
+Se puede mejorar & Indicadores medibles antes y después: docentes que conocen las necesidades el primer día, alertas por curso a mitad de semestre, franjas para las actividades de integración, estudiantes aislados y aprobación de los estudiantes con alguna necesidad (Sección~\ref{sec:resultados}). \\
+Se puede modelar & Conjuntos y funciones, lógica proposicional, grafos, centralidad y coloración (Sección~\ref{sec:modelo}). \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\noindent\textit{Nota del grupo:} \completar{verificar las cifras en las fuentes originales (SNIES, SIMAT, DANE) antes de la entrega y, si es posible, agregar datos de la propia universidad solicitados a Bienestar}.
+\noindent\textit{Nota del grupo:} \completar{verificar las cifras en las fuentes originales antes de la entrega}.
 
 \subsection{Objetivos}
-\textbf{Objetivo general.} Diseñar y prototipar un sistema, adaptable a universidades y colegios, que modele con teoría de grafos la relación entre estudiantes, cursos, docentes y necesidades de apoyo, para que el docente conozca antes de clase las necesidades de su grupo y la institución priorice sus apoyos.
+\textbf{General.} Diseñar y prototipar una plataforma, adaptable a universidades y colegios, que use conjuntos, lógica y grafos para que el docente conozca desde el inicio las necesidades de apoyo de su curso y la unidad de apoyo priorice y acompañe, sin cargar al docente con trabajo adicional.
 
-\textbf{Objetivos específicos.}
-\begin{enumerate}[nosep]
-  \item Representar las necesidades de apoyo como conjuntos y las reglas de privacidad como proposiciones lógicas.
-  \item Construir el grafo de cursos y calcular grado, cercanía e intermediación para priorizar cursos y docentes coordinadores.
-  \item Asignar horarios a actividades de integración mediante coloración de grafos, minimizando el número de franjas.
-  \item Detectar personas aisladas (estudiantes o docentes) mediante vértices de grado cero.
-  \item Validar el programa con casos de resultado conocido y con datos simulados justificados.
+\textbf{Específicos.}
+\begin{enumerate}
+  \item Agrupar las necesidades en \emph{necesidades comunes} mediante una función, sin mostrar diagnósticos.
+  \item Formalizar con lógica proposicional la regla de privacidad y la alerta de mitad de semestre.
+  \item Calcular grado, cercanía e intermediación para priorizar cursos y sugerir a quién convocar.
+  \item Programar las actividades de integración con coloración de grafos.
+  \item Detectar estudiantes aislados (grado cero) antes y después de las actividades.
+  \item Simular un semestre completo y estimar el impacto esperado comparando el escenario sin y con la plataforma.
 \end{enumerate}
 
 \subsection{Alcance del prototipo}
-El prototipo es un programa ejecutable que recibe datos (archivos CSV), construye los grafos, ejecuta los algoritmos y genera el panel de cada docente y los indicadores para la unidad de apoyo. \textbf{No incluye} interfaz web, autenticación de usuarios, foro docente ni aplicación móvil: estos componentes se describen como trabajo futuro (Sección~\ref{sec:conclusiones}).
+El prototipo es un programa propio (Python y Streamlit) que genera datos simulados, construye los grafos, ejecuta los algoritmos y muestra los resultados en un panel. No incluye autenticación, base de datos permanente ni conexión con los sistemas académicos reales; se presentan como trabajo futuro.
 
 % ------------------------------------------------------------- 2. Modelación
 \section{Modelación con la teoría del curso}\label{sec:modelo}
 
-\subsection{Principio de diseño: necesidades, no diagnósticos}
-Los datos de salud son datos sensibles (Ley 1581 de 2012). Por ello, el docente nunca ve el diagnóstico del estudiante sino el \emph{ajuste} que requiere (por ejemplo, ``tiempo adicional en evaluaciones''). Formalmente, sea $D$ el conjunto de diagnósticos y $A$ el conjunto de ajustes; la unidad de apoyo define una relación $\alpha \subseteq D \times A$ y el docente solo accede a la imagen de esa relación. Además, el sistema trabaja con un \emph{perfil de aprendizaje} que llenan \textbf{todos} los estudiantes, para que ninguno quede señalado por tener un perfil.
+\subsection{Principios de diseño}
+\begin{itemize}
+  \item \textbf{Necesidades, no diagnósticos.} Los datos de salud son sensibles (Ley 1581 de 2012). El docente ve qué debe hacer distinto en clase, nunca la condición médica.
+  \item \textbf{Perfil para todos.} Todos los estudiantes llenan un perfil corto (cómo aprenden mejor y qué les interesa), para que nadie quede señalado por tenerlo.
+  \item \textbf{Sin grupos aparte.} Las actividades de integración son por intereses y abiertas a todos.
+  \item \textbf{Sin trabajo extra para el docente.} Las notas llegan del sistema académico y las alertas son automáticas.
+\end{itemize}
 
-\subsection{Conjuntos}
-Sean $E$ el conjunto de estudiantes, $C_k \subseteq E$ los estudiantes inscritos en el curso $k$, y $N_j \subseteq E$ los estudiantes con la necesidad de apoyo $j$ (visual, auditiva, motriz, cognitiva, psicosocial). El número de estudiantes con la necesidad $j$ en el curso $k$ es $|C_k \cap N_j|$, y el número de estudiantes del curso con al menos una necesidad se obtiene por inclusión-exclusión:
-\[
-\Big|C_k \cap \bigcup_j N_j\Big| = \sum_j |C_k\cap N_j| - \sum_{i<j} |C_k\cap N_i\cap N_j| + \cdots
-\]
-Un estudiante puede pertenecer a varios conjuntos $N_j$ o a ninguno: no es una clasificación rígida de personas sino de necesidades.
-
-\subsection{Lógica proposicional: regla de privacidad}
-Para un estudiante y un curso se definen:
-$p$: ``el estudiante está inscrito en el curso'';
-$q$: ``el estudiante tiene una necesidad registrada'';
-$r$: ``existe consentimiento''.
-El sistema muestra el ajuste al docente ($s$) si y solo si
-\[
-s \;\leftrightarrow\; (p \wedge q \wedge r).
-\]
-En la universidad, $r$ es el consentimiento del estudiante (mayor de edad); en el colegio, el consentimiento de padres o acudientes. La tabla de verdad confirma que la información solo se muestra en uno de los ocho casos posibles, lo que el programa verifica como prueba automática.
+\subsection{Conjuntos y funciones: necesidades comunes}
+Sean $E$ el conjunto de estudiantes, $C_k \subseteq E$ los inscritos en el curso $k$, $N \subseteq E$ quienes declaran alguna necesidad y $V \subseteq N$ quienes además dan consentimiento. Sea $K=\{$visual, auditiva, motriz, cognitiva, psicosocial$\}$ el conjunto de categorías y $\mathcal{N}$ el de necesidades comunes. Se define la función $f: K \to \mathcal{P}(\mathcal{N})$ de la Tabla~\ref{tab:funcion}; para un estudiante con categorías $A\subseteq K$, sus necesidades comunes son $F(A)=\bigcup_{a\in A} f(a)$.
 
 \begin{table}[H]
 \centering
-\caption{Tabla de verdad de la regla de privacidad}
+\caption{Función $f$: de categoría a necesidades comunes}
+\label{tab:funcion}
 \small
-\begin{tabular}{cccc|cccc}
+\begin{tabular}{ll}
 \toprule
-$p$ & $q$ & $r$ & $s$ & $p$ & $q$ & $r$ & $s$\\
+Categoría $a$ & $f(a)$ \\
 \midrule
-V & V & V & \textbf{V} & F & V & V & F\\
-V & V & F & F & F & V & F & F\\
-V & F & V & F & F & F & V & F\\
-V & F & F & F & F & F & F & F\\
+Cognitiva & \{Tiempo y ritmo, Instrucciones claras\} \\
+Motriz & \{Tiempo y ritmo, Acceso físico\} \\
+Visual & \{Acceso a la información\} \\
+Auditiva & \{Acceso a la información, Instrucciones claras\} \\
+Psicosocial & \{Clima y anticipación\} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Grafo de cursos y medidas de centralidad}
-Se define el grafo no dirigido $G_C=(V,E)$ donde cada vértice es un curso y existe una arista $\{k,l\}$ si los cursos $k$ y $l$ comparten al menos un estudiante con necesidad de apoyo; el peso de la arista es el número de estudiantes compartidos. Sobre $G_C$ se calculan (Freeman, 1978):
-\begin{itemize}[nosep]
-  \item \textbf{Grado} $\deg(v)$: número de cursos conectados con $v$.
-  \item \textbf{Cercanía} $C_C(v) = \dfrac{n-1}{\sum_{u\neq v} d(v,u)}$, con $d$ la distancia más corta.
-  \item \textbf{Intermediación} $C_B(v)=\displaystyle\sum_{s\neq v\neq t}\frac{\sigma_{st}(v)}{\sigma_{st}}$, donde $\sigma_{st}$ es el número de caminos más cortos entre $s$ y $t$ y $\sigma_{st}(v)$ los que pasan por $v$.
-\end{itemize}
-\textbf{Interpretación:} el grado de un curso en el grafo bipartito estudiantes--cursos indica cuántos estudiantes con necesidades tiene (prioridad de capacitación); la intermediación alta identifica al docente ``puente'', el más indicado para coordinar estrategias con otros docentes.
+El número de estudiantes del curso $k$ con la necesidad común $n$ es
+\[
+\big|\{\,e \in C_k \cap V : n \in F(A_e)\,\}\big| ,
+\]
+es decir, una \emph{unión}: un estudiante con dos categorías que llevan a la misma necesidad cuenta una sola vez. Cada necesidad común tiene asociadas tres herramientas concretas para la clase.
 
-\subsection{Coloración de grafos: horarios de las actividades de integración}
-Las actividades de integración son presenciales, abiertas a todos y organizadas por intereses, sin crear grupos aparte para personas con discapacidad. Se define $G_A$ con un vértice por actividad y una arista entre dos actividades si comparten al menos un estudiante interesado. Una coloración propia $c: V \to \{1,\dots,k\}$ asigna a cada actividad una franja horaria de forma que actividades adyacentes no coincidan. El mínimo de franjas es el número cromático $\chi(G_A)$.
+\subsection{Lógica proposicional: privacidad y alerta}
+Para un estudiante y un curso: $p$: ``está inscrito''; $q$: ``tiene una necesidad registrada''; $r$: ``dio consentimiento'' (en el colegio, el acudiente). El docente ve el indicador $\bullet$ junto al nombre si y solo si
+\[
+s \;\leftrightarrow\; (p \wedge q \wedge r).
+\]
+Solo una de las ocho combinaciones de la tabla de verdad hace verdadera a $s$. El indicador dice \emph{que} el estudiante tiene apoyo, nunca \emph{qué} tiene. Con $t$: ``la nota del primer corte es menor que 3,0'', la alerta automática a la unidad de apoyo es
+\[
+\text{alerta} \;\leftrightarrow\; s \wedge t .
+\]
+Esta alerta complementa la institucional: es por curso, llega a mitad de semestre y conecta la nota con una necesidad registrada.
 
-\subsection{Detección de aislamiento}
-En el grafo de colaboración de un curso (vértices: estudiantes; arista: trabajaron juntos en una actividad), un vértice con $\deg(v)=0$ representa a un estudiante aislado. El mismo criterio se aplica a la red docente (vértices: docentes; arista: comparten estudiantes o interactúan en espacios de apoyo).
+\subsection{Grafo de cursos y centralidad}
+$G_C=(V_C,E_C)$ tiene un vértice por curso y una arista $\{k,l\}$ si los cursos comparten al menos $u=3$ estudiantes con apoyo visible. Sobre $G_C$ se calculan (Freeman, 1978):
+\[
+\deg(v),\qquad C_C(v)=\frac{r-1}{\sum_{w} d(v,w)}\cdot\frac{r-1}{n-1},\qquad
+C_B(v)=\sum_{s\neq v\neq t}\frac{\sigma_{st}(v)}{\sigma_{st}},
+\]
+donde $d$ es la distancia, $r$ el número de vértices alcanzables desde $v$ (el segundo factor corrige grafos no conexos), $\sigma_{st}$ el número de caminos más cortos entre $s$ y $t$ y $\sigma_{st}(v)$ los que pasan por $v$. El curso de mayor intermediación conecta a los demás: conviene empezar por él. El umbral evita que el grafo sea casi completo, caso en el que la centralidad no distingue nada.
+
+\subsection{Grafo de docentes}
+$G_D$ tiene un vértice por docente y una arista si sus cursos comparten al menos 4 estudiantes con apoyo. Se usa para tres decisiones: al pedir una planeación, sugerir invitar a los \emph{vecinos} del docente (comparten estudiantes); proponer como \emph{mentores} a los de mayor intermediación; e invitar a la comunidad a los de menor grado.
+
+\subsection{Coloración: horario de las actividades de integración}
+$G_A$ tiene un vértice por actividad y una arista (choque) si dos actividades comparten al menos 8 participantes. Una coloración propia $c: V_A\to\{1,\dots,k\}$ asigna franjas de modo que actividades adyacentes no coincidan; el mínimo de franjas es el número cromático $\chi(G_A)$.
+
+\subsection{Aislamiento}
+En el grafo de compañeros (vértice: estudiante; arista: trabajaron juntos), un vértice con $\deg(v)=0$ es un estudiante aislado. Se compara el grafo antes y después de agregar las conexiones creadas por las actividades.
 
 \subsection{Adaptación a universidades y colegios}
-El modelo matemático es el mismo; cambian los parámetros de configuración (Tabla~\ref{tab:adaptacion}).
+El modelo es el mismo; cambian los parámetros de la Tabla~\ref{tab:adaptacion}.
 
 \begin{table}[H]
 \centering
 \caption{Parámetros según el tipo de institución}
 \label{tab:adaptacion}
 \small
-\begin{tabularx}{\textwidth}{>{\bfseries}p{3.2cm}XX}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{3.8cm}XX}
 \toprule
 Parámetro & Universidad & Colegio \\
 \midrule
-Unidad de apoyo & Bienestar Universitario & Orientación escolar / docente de apoyo pedagógico \\
-Unidad académica (vértice) & Curso o asignatura (grupos variables) & Grado y grupo (grupos fijos) \\
-Consentimiento ($r$) & Del estudiante & De padres o acudientes (menores de edad) \\
-Marco normativo & Ley 1618 de 2013; Ley 1581 de 2012 & Además, Decreto 1421 de 2017 (Plan Individual de Ajustes Razonables, PIAR) \\
-Actividades de integración & Franjas libres entre clases & Jornada escolar, descansos y extracurriculares \\
-Uso de la centralidad & Alta: los estudiantes cruzan muchos cursos & El grafo docente--grupo identifica qué docentes comparten grupos \\
+Unidad de apoyo & Bienestar Universitario & Orientación Escolar \\
+Vértice del grafo de cursos & Curso (grupos variables) & Asignatura y grupo (grupos fijos) \\
+Consentimiento $r$ & Del estudiante & Del padre, madre o acudiente \\
+Marco normativo & Leyes 1618 de 2013 y 1581 de 2012 & Además, Decreto 1421 de 2017 (PIAR) \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -199,155 +210,222 @@ Uso de la centralidad & Alta: los estudiantes cruzan muchos cursos & El grafo do
 % ------------------------------------------------------------- 3. Solución
 \section{Solución: algoritmos y datos}
 
-\subsection{Arquitectura del programa}
-El prototipo se organiza en módulos:
-\begin{enumerate}[nosep]
-  \item \textbf{Entrada:} lectura de \texttt{config} (tipo de institución) y archivos CSV: \texttt{estudiantes}, \texttt{cursos}, \texttt{inscripciones}, \texttt{necesidades}, \texttt{intereses}.
-  \item \textbf{Privacidad:} filtro que aplica $s \leftrightarrow (p\wedge q\wedge r)$ y traduce diagnósticos a ajustes.
-  \item \textbf{Grafos:} construcción de $G_C$, $G_A$ y del grafo de colaboración como listas de adyacencia.
-  \item \textbf{Algoritmos:} centralidades, coloración y detección de aislamiento.
-  \item \textbf{Salida:} panel por docente (texto o CSV), ranking de cursos para la unidad de apoyo, horario de actividades e indicadores.
-\end{enumerate}
-Lenguaje: \completar{Python 3, u otro elegido por el grupo}. Los algoritmos se implementan por el grupo; una librería como NetworkX se usa solo para \emph{verificar} los resultados en las pruebas.
-
-\subsection{Algoritmos}
-\textbf{Grado.} Recorrido de la lista de adyacencia: $O(|V|+|E|)$.
-
-\textbf{Cercanía.} Búsqueda en anchura (BFS) desde cada vértice para obtener distancias: $O(|V|(|V|+|E|))$.
-
-\textbf{Intermediación.} Algoritmo de Brandes (2001): para cada vértice fuente se ejecuta una BFS contando caminos más cortos y luego se acumulan dependencias en orden inverso: $O(|V||E|)$ en grafos no ponderados.
-
-\textbf{Coloración.} Encontrar $\chi(G)$ es un problema NP-difícil, por lo que se usa el algoritmo voraz de Welsh y Powell (1967):
-\begin{enumerate}[nosep]
-  \item Ordenar los vértices por grado de mayor a menor.
-  \item Recorrerlos en ese orden asignando a cada uno el menor color no usado por sus vecinos.
-\end{enumerate}
-El resultado es una cota superior de $\chi(G)$. Para grafos pequeños (hasta unas 12 actividades) el programa además calcula $\chi(G)$ exacto por retroceso (\emph{backtracking}) y compara ambos valores.
-
-\textbf{Aislamiento.} Vértices con grado cero; adicionalmente, componentes conexas por BFS.
-
-\subsection{Datos}
-Por tratarse de datos sensibles de salud y, en colegios, de menores de edad, no es ético ni legal usar datos reales de personas sin consentimiento. Por ello se usa una \textbf{simulación justificada}: un generador con semilla fija crea una institución ficticia en la que la proporción de estudiantes con necesidades de apoyo se fija a partir de las cifras oficiales citadas en la Tabla~\ref{tab:impacto}, y las categorías de necesidad se asignan de forma aleatoria. La semilla garantiza la reproducibilidad.
-
-\begin{table}[H]
-\centering
-\caption{Parámetros de la simulación}
-\small
-\begin{tabular}{lcc}
-\toprule
-Parámetro & Universidad & Colegio \\
-\midrule
-Estudiantes & \completar{120} & \completar{120} \\
-Cursos o grupos & \completar{8} & \completar{4 grupos} \\
-Docentes & \completar{8} & \completar{10} \\
-Proporción con necesidad de apoyo & \completar{definir y justificar} & \completar{definir y justificar} \\
-Actividades de integración & \completar{6} & \completar{6} \\
-Semilla aleatoria & \completar{42} & \completar{42} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-% ------------------------------------------------------------- 4. Resultados
-\section{Resultados e interpretación}\label{sec:resultados}
-
-\subsection{Caso de prueba 1 (resultado conocido): centralidad}
-Cuatro cursos: Cálculo (A), Discretas (B), Física (C) y Programación (D). Los estudiantes con necesidades compartidos generan las aristas $AB$, $BC$ y $BD$, es decir, un grafo estrella con centro en $B$ (Figura~\ref{fig:casos}, izquierda).
-
-\begin{table}[H]
-\centering
-\caption{Valores esperados, calculados a mano, para el caso de prueba 1}
-\small
-\begin{tabular}{lcccc}
-\toprule
-Medida & A & B & C & D\\
-\midrule
-Grado & 1 & \textbf{3} & 1 & 1\\
-Cercanía & 0,6 & \textbf{1,0} & 0,6 & 0,6\\
-Intermediación (sin normalizar) & 0 & \textbf{3} & 0 & 0\\
-\bottomrule
-\end{tabular}
-\end{table}
-Por ejemplo, para $A$: $d(A,B)=1$, $d(A,C)=2$, $d(A,D)=2$, luego $C_C(A)=3/5=0{,}6$. Los tres pares de hojas $(A,C),(A,D),(C,D)$ tienen un único camino más corto y todos pasan por $B$, luego $C_B(B)=3$. \textbf{Interpretación:} Discretas es el curso prioritario y su docente es el coordinador natural. El programa debe reproducir exactamente estos valores. Resultado obtenido: \completar{pegar salida del programa}.
-
-\subsection{Caso de prueba 2 (resultado conocido): coloración}
-Actividades: Fútbol, Música, Ajedrez y Teatro. Fútbol--Música y Música--Ajedrez comparten estudiantes (camino de longitud 2): $\chi=2$. Si se agrega Teatro, que comparte estudiantes con Fútbol y con Música, se forma un triángulo y $\chi=3$.
+\subsection{Arquitectura}
+El programa sigue el mismo árbol de la propuesta: la unidad de apoyo es la raíz y tiene tres ramas (Figura~\ref{fig:arbol}). El código separa el cálculo de la presentación:
+\begin{itemize}
+  \item \codigo{rai/grafos.py}: algoritmos de grafos, implementados por el grupo sin librerías de grafos.
+  \item \codigo{rai/modelo.py}: conjuntos, función $F$, reglas lógicas y construcción de los grafos.
+  \item \codigo{rai/simulacion.py} y \codigo{rai/semestre.py}: datos simulados y recorrido del semestre.
+  \item \codigo{app.py}: panel visual con siete vistas: recorrido del semestre, Bienestar, las tres ramas, pruebas y guía del equipo.
+\end{itemize}
 
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
-  v/.style={circle,draw=gris,thick,minimum size=9mm,font=\bfseries},
-  c1/.style={v,fill=azul!20,draw=azul},
-  c2/.style={v,fill=naranja!25,draw=naranja},
-  c3/.style={v,fill=morado!20,draw=morado},
-  every edge/.style={draw,thick,gris}]
-  % Estrella
-  \node[v,fill=azul!20,draw=azul,minimum size=11mm] (B) at (0,0) {B};
-  \node[v] (A) at (-1.6,1.1) {A};
-  \node[v] (C) at (1.6,1.1) {C};
-  \node[v] (D) at (0,-1.7) {D};
-  \path (B) edge (A) (B) edge (C) (B) edge (D);
-  \node[font=\small] at (0,-2.7) {Caso 1: estrella, centro B};
-  % Coloración
-  \begin{scope}[xshift=6.5cm]
-    \node[c1,font=\scriptsize\bfseries,minimum size=13mm] (F) at (-1.6,1.0) {Fútbol};
-    \node[c2,font=\scriptsize\bfseries,minimum size=13mm] (M) at (0,-0.6) {Música};
-    \node[c1,font=\scriptsize\bfseries,minimum size=13mm] (Aj) at (1.6,1.0) {Ajedrez};
-    \node[c3,font=\scriptsize\bfseries,minimum size=13mm] (T) at (-1.9,-1.3) {Teatro};
-    \path (F) edge (M) (M) edge (Aj);
-    \path[dashed] (T) edge (F) (T) edge (M);
-    \node[font=\small,align=center] at (0,-2.7) {Caso 2: sin Teatro $\chi=2$;\\ con Teatro (líneas punteadas) $\chi=3$};
-  \end{scope}
+  caja/.style={draw,thick,rounded corners,align=center,font=\small,minimum height=1cm,text width=3.6cm},
+  flecha/.style={-{Stealth},thick,gris}]
+  \node[caja,draw=morado,fill=morado!10,text width=6cm] (B) at (0,0) {\textbf{Unidad de apoyo}\\ alertas y solicitudes};
+  \node[caja,draw=azul,fill=azul!10] (A) at (-4.6,-2.2) {\textbf{1. Apoyo académico}\\ conjuntos, lógica};
+  \node[caja,draw=verde,fill=verde!10] (I) at (0,-2.2) {\textbf{2. Integración}\\ coloración, grado 0};
+  \node[caja,draw=naranja,fill=naranja!10] (D) at (4.6,-2.2) {\textbf{3. Comunidad docente}\\ centralidad};
+  \draw[flecha] (B) -- (A); \draw[flecha] (B) -- (I); \draw[flecha] (B) -- (D);
 \end{tikzpicture}
-\caption{Grafos de los casos de prueba con resultado conocido}
-\label{fig:casos}
+\caption{Estructura del prototipo y teoría usada en cada rama}
+\label{fig:arbol}
 \end{figure}
 
-\subsection{Resultados con datos simulados}
-\completar{Completar con la salida del programa para cada tipo de institución: ranking de cursos por grado e intermediación, número de franjas obtenidas por Welsh--Powell frente a $\chi$ exacto, número de vértices aislados, y un ejemplo de panel docente.}
+\subsection{Algoritmos}
+\begin{itemize}
+  \item \textbf{Grado:} recorrido de la lista de adyacencia, $O(|V|+|E|)$.
+  \item \textbf{Cercanía:} una búsqueda en anchura (BFS) por vértice, $O(|V|(|V|+|E|))$.
+  \item \textbf{Intermediación:} algoritmo de Brandes (2001). Desde cada vértice, una BFS cuenta los caminos más cortos $\sigma$; luego se acumulan las dependencias en orden inverso. $O(|V||E|)$.
+  \item \textbf{Coloración:} encontrar $\chi(G)$ es NP-difícil, por lo que se usa el algoritmo voraz de Welsh y Powell (1967): ordenar por grado descendente y asignar el menor color libre. Para grafos de hasta 14 vértices se calcula además $\chi$ exacto por retroceso y se comparan.
+  \item \textbf{Aislamiento y componentes:} vértices de grado 0 y BFS.
+  \item \textbf{Necesidades comunes y alertas:} unión de conjuntos y evaluación de $s$ y $s\wedge t$ por inscripción, $O(|I|)$ con $|I|$ el número de inscripciones.
+\end{itemize}
 
-\subsection{Indicadores antes y después}
+\subsection{Datos simulados}
+Como los datos reales son de salud y, en colegios, de menores de edad, se usa una simulación justificada y reproducible (Tabla~\ref{tab:supuestos}). La semilla fija hace que cualquiera obtenga los mismos resultados. El generador también exporta los datos a CSV (entrada y salida del programa).
+
 \begin{table}[H]
 \centering
-\caption{Indicadores de mejora (a completar con la simulación)}
+\caption{Supuestos de la simulación (valores por defecto, modificables)}
+\label{tab:supuestos}
 \small
-\begin{tabularx}{\textwidth}{X>{\centering\arraybackslash}p{3.6cm}>{\centering\arraybackslash}p{3.6cm}}
+\begin{tabularx}{\textwidth}{Xr}
 \toprule
-Indicador & Sin la plataforma & Con la plataforma \\
+Supuesto & Valor \\
 \midrule
-Docentes que conocen las necesidades de su curso antes de clase (\%) & \completar{depende de que el estudiante lo solicite} & \completar{100\,\% de los casos con consentimiento} \\
-Franjas horarias para las actividades & \completar{una por actividad} & \completar{$\chi(G_A)$} \\
-Conflictos de horario entre actividades & \completar{} & 0 \\
-Estudiantes aislados (grado 0) & \completar{} & \completar{} \\
+Perfiles al inicio del semestre & 300 a 600 (referencia: 450) \\
+Proporción con alguna necesidad de apoyo & 12\,\% \\
+Consentimiento entre quienes declaran una necesidad & 85\,\% \\
+Nota del primer corte, escala 0--5 (normal) & media 3,6; 3,1 con necesidad; desv. 0,7 \\
+Probabilidad de pedir planeación (curso con $\geq 3$ estudiantes con apoyo) & 50\,\% \\
+Sin plataforma: el estudiante le cuenta al docente & 30\,\% por curso \\
+Mejora de nota si el docente adapta la clase / por seguimiento tras alerta & $+0{,}4$ / $+0{,}3$ \\
+Semilla & 42 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
+\subsection{Recorrido del semestre}
+Para estimar el impacto, el programa simula el \emph{mismo} semestre dos veces, sin y con la plataforma, y lo muestra como un libro de ocho páginas: matrícula, primer día, planeación (semana 3), integración (semana 6), primer corte (semana 8), segundo corte (semana 12) e impacto. La variación aleatoria de las notas es idéntica en ambos escenarios; lo único que cambia es si el docente conocía las necesidades y si hubo seguimiento. La nota final es el promedio de los dos cortes y se aprueba con 3,0. Si los efectos se fijan en cero, ambos escenarios coinciden (prueba automática), lo que confirma que la diferencia se debe solo a la plataforma.
+
+% ------------------------------------------------------------- 4. Resultados
+\section{Resultados e interpretación}\label{sec:resultados}
+
+\subsection{Casos de prueba con resultado conocido}
+El programa incluye 13 pruebas automáticas (\codigo{python -m unittest}); todas pasan. Las dos principales se calcularon a mano (Figura~\ref{fig:casos}).
+
+\textbf{Caso 1, centralidad.} Cursos A, B, C, D con aristas $AB$, $BC$, $BD$. Esperado y obtenido: $\deg(B)=3$; $C_C(A)=3/(1+2+2)=0{,}6$ y $C_C(B)=1$; los pares $(A,C)$, $(A,D)$, $(C,D)$ solo se conectan por $B$, luego $C_B(B)=3$.
+
+\textbf{Caso 2, coloración.} Fútbol--Música y Música--Ajedrez: $\chi=2$. Al agregar Teatro unido a Fútbol y a Música se forma un triángulo y $\chi=3$. Welsh--Powell obtiene los mismos valores.
+
+Las demás pruebas verifican la tabla de verdad de la privacidad, que un estudiante cuente una sola vez por necesidad común, que la alerta solo se dispare con apoyo, consentimiento y nota menor que 3,0, el aislamiento, la reproducibilidad de la simulación y el recorrido del semestre.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  v/.style={circle,draw=gris,thick,minimum size=8mm,font=\bfseries\small},
+  c1/.style={v,fill=azul!20,draw=azul,font=\scriptsize\bfseries,minimum size=12mm},
+  c2/.style={v,fill=naranja!25,draw=naranja,font=\scriptsize\bfseries,minimum size=12mm},
+  c3/.style={v,fill=morado!20,draw=morado,font=\scriptsize\bfseries,minimum size=12mm}]
+  \node[v,fill=azul!20,draw=azul,minimum size=10mm] (B) at (0,0) {B};
+  \node[v] (A) at (-1.5,1) {A}; \node[v] (C) at (1.5,1) {C}; \node[v] (D) at (0,-1.5) {D};
+  \draw[thick,gris] (B)--(A) (B)--(C) (B)--(D);
+  \node[font=\small] at (0,-2.4) {Caso 1: estrella};
+  \begin{scope}[xshift=6.5cm]
+    \node[c1] (F) at (-1.6,0.9) {Fútbol}; \node[c2] (M) at (0,-0.5) {Música};
+    \node[c1] (Aj) at (1.6,0.9) {Ajedrez}; \node[c3] (T) at (-1.9,-1.4) {Teatro};
+    \draw[thick,gris] (F)--(M) (M)--(Aj); \draw[thick,gris,dashed] (T)--(F) (T)--(M);
+    \node[font=\small,align=center] at (0,-2.4) {Caso 2: $\chi=2$; con Teatro $\chi=3$};
+  \end{scope}
+\end{tikzpicture}
+\caption{Grafos de los casos de prueba}
+\label{fig:casos}
+\end{figure}
+
+\subsection{Simulación de referencia (universidad)}
+Con 450 perfiles, 24 cursos, 12 docentes, 2.259 inscripciones y semilla 42: 49 estudiantes declaran alguna necesidad y 41 dan consentimiento.
+
+\textbf{Necesidades comunes.} Entre los 41 estudiantes con apoyo visible: Tiempo y ritmo, 24; Instrucciones claras, 19; Clima y anticipación, 15; Acceso a la información, 9; Acceso físico, 7. La suma (74) supera 41 porque un estudiante puede tener varias necesidades: los conjuntos no son disjuntos.
+
+\textbf{Centralidad.} $G_C$ tiene 24 vértices, 63 aristas, 3 componentes y 2 cursos aislados. Los de mayor intermediación (Tabla~\ref{tab:central}) son los cursos con los que conviene empezar la planeación.
+
+\begin{table}[H]
+\centering
+\caption{Cursos de mayor intermediación en $G_C$ (umbral 3)}
+\label{tab:central}
+\small
+\begin{tabular}{lccc}
+\toprule
+Curso & Grado & Cercanía & Intermediación (normalizada) \\
+\midrule
+Programación I (1) & 13 & 0,66 & 0,187 \\
+Cálculo II (1) & 11 & 0,62 & 0,126 \\
+Expresión Oral y Escrita (1) & 11 & 0,60 & 0,114 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Coloración.} Con el umbral de 8 participantes compartidos, las 12 actividades necesitan 6 franjas en lugar de 12. La Tabla~\ref{tab:color} muestra que al aumentar el umbral el grafo pierde aristas y $\chi$ baja; en todos los casos Welsh--Powell coincidió con el óptimo.
+
+\begin{table}[H]
+\centering
+\caption{Coloración del grafo de actividades según el umbral de choque}
+\label{tab:color}
+\small
+\begin{tabular}{cccc}
+\toprule
+Umbral & Aristas & Welsh--Powell & $\chi$ exacto \\
+\midrule
+1 & 55 & 8 & 8 \\
+3 & 40 & 7 & 7 \\
+8 & 21 & 6 & 6 \\
+15 & 3 & 2 & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Aislamiento, alertas y solicitudes.} Los estudiantes aislados bajan de 14 a 2 y el grado medio del grafo de compañeros sube de 13,2 a 18,7. En el primer corte se generan 84 alertas (parejas estudiante--curso con apoyo y nota menor que 3,0) en 23 de los 24 cursos. En las semanas 1 a 3 se simulan 14 solicitudes de planeación.
+
+\textbf{Colegio.} Con la misma configuración, el grafo de cursos queda dividido en 6 componentes, una por grupo, porque en el colegio los estudiantes de un grupo comparten todas las asignaturas; ahí la intermediación es cero y la centralidad útil es la del grafo de docentes, que sí conecta los grupos. Los aislados bajan de 9 a 3.
+
+\subsection{Impacto esperado: el mismo semestre sin y con la plataforma}
+\begin{table}[H]
+\centering
+\caption{Indicadores del recorrido del semestre (semilla 42)}
+\label{tab:impactoesperado}
+\small
+\begin{tabularx}{\textwidth}{Xcccc}
+\toprule
+& \multicolumn{2}{c}{Universidad} & \multicolumn{2}{c}{Colegio} \\
+Indicador & Sin & Con & Sin & Con \\
+\midrule
+Docentes que conocen las necesidades el primer día & 32\,\% & 84\,\% & 30\,\% & 84\,\% \\
+Franjas para las actividades & 12 & 6 & 12 & 6 \\
+Estudiantes aislados & 14 & 2 & 9 & 3 \\
+Alertas por curso a mitad de semestre & 0 & 84 & 0 & 136 \\
+Aprobación de estudiantes con necesidad & 61\,\% & 72\,\% & 58\,\% & 69\,\% \\
+Aprobación del resto (referencia) & \multicolumn{2}{c}{79\,\%} & \multicolumn{2}{c}{79\,\%} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+En la universidad, la brecha de aprobación frente al resto de estudiantes pasa de 17 a 7 puntos.
+
+\subsection{Robustez frente a la semilla}
+Para descartar que el resultado dependa de una simulación favorable, se repitió con cinco semillas (Tabla~\ref{tab:semillas}). Los valores cambian, pero en todos los casos la plataforma mejora los tres indicadores.
+
+\begin{table}[H]
+\centering
+\caption{Resultados con distintas semillas (universidad, 450 perfiles, 12\,\%)}
+\label{tab:semillas}
+\small
+\begin{tabular}{cccc}
+\toprule
+Semilla & Aprobación (sin $\to$ con) & Aislados (antes $\to$ después) & Docentes informados \\
+\midrule
+42 & 61\,\% $\to$ 72\,\% & 14 $\to$ 2 & 32\,\% $\to$ 84\,\% \\
+7 & 59\,\% $\to$ 73\,\% & 14 $\to$ 3 & 33\,\% $\to$ 89\,\% \\
+100 & 55\,\% $\to$ 67\,\% & 15 $\to$ 3 & 32\,\% $\to$ 84\,\% \\
+2026 & 56\,\% $\to$ 67\,\% & 13 $\to$ 4 & 32\,\% $\to$ 79\,\% \\
+1 & 59\,\% $\to$ 73\,\% & 20 $\to$ 4 & 32\,\% $\to$ 92\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Interpretación}
+La mayor ganancia está en el tiempo: con la plataforma, el docente sabe en la semana 1 lo que hoy, en el mejor caso, sabe cuando el estudiante ya perdió. La mejora en aprobación depende de los supuestos de efecto, que se eligieron moderados y pueden ajustarse en el programa; por eso se reporta como \emph{impacto esperado}, no medido.
+
 % ------------------------------------------------------------- 5. Conclusiones
-\section{Conclusiones y limitaciones}\label{sec:conclusiones}
+\section{Conclusiones y limitaciones}
 
 \subsection{Conclusiones}
-\begin{itemize}[nosep]
-  \item La teoría de grafos permite convertir un problema social (la falta de información del docente) en preguntas precisas: qué curso priorizar (grado), qué docente coordina (intermediación), cuántas franjas se necesitan ($\chi$) y quién está aislado (grado cero).
-  \item La lógica proposicional garantiza formalmente que la información solo se muestra con consentimiento.
-  \item El mismo modelo sirve para universidades y colegios cambiando solo los parámetros de configuración.
-  \item La inclusión no se logra creando grupos aparte: las actividades por intereses, abiertas a todos, integran a la comunidad completa.
+\begin{itemize}
+  \item La teoría del curso convierte un problema social en decisiones concretas: qué curso priorizar (intermediación), a quién convocar (vecinos), cuántas franjas hacen falta ($\chi$) y quién está solo (grado cero).
+  \item La lógica proposicional garantiza formalmente que el docente solo ve el indicador con consentimiento y que las alertas no requieren trabajo del docente.
+  \item La función de categorías a necesidades comunes permite dar herramientas por grupo y no estudiante por estudiante.
+  \item El valor principal es \emph{preventivo}: la planeación ocurre antes de la primera nota y complementa, sin reemplazar, las alertas institucionales existentes.
+  \item El mismo modelo sirve para universidades y colegios cambiando solo parámetros.
 \end{itemize}
 
 \subsection{Limitaciones}
-\begin{itemize}[nosep]
-  \item Los resultados provienen de datos simulados; su validez real requiere un piloto con datos institucionales y consentimiento.
-  \item El algoritmo voraz no garantiza el número cromático óptimo en grafos grandes.
-  \item El sistema depende de que el estudiante (o su acudiente) se registre al menos una vez; el registro es único, pero no puede eliminarse por razones legales.
-  \item No se evaluó la usabilidad con docentes reales.
+\begin{itemize}
+  \item Los resultados provienen de datos simulados; el impacto real requiere un piloto con datos institucionales y consentimiento.
+  \item Los efectos sobre las notas son supuestos; se mostró que, si fueran cero, la plataforma no cambiaría la aprobación.
+  \item El algoritmo voraz no garantiza $\chi$ óptimo en grafos grandes; en los casos probados coincidió.
+  \item El estudiante (o su acudiente) debe registrarse al menos una vez; por ley no puede omitirse.
+  \item El foro y las solicitudes no se guardan de forma permanente en el prototipo.
 \end{itemize}
 
 \subsection{Trabajo futuro}
-Interfaz web para docentes y unidad de apoyo; foro docente con opción anónima y encuentros presenciales; retroalimentación de los docentes durante el semestre y encuesta anónima a los estudiantes; alertas tempranas por notas y asistencia; integración con los sistemas académicos de la institución; y, con datos históricos, un modelo de redes neuronales que estime el riesgo de deserción.
+Conexión con el sistema académico y con las alertas institucionales; base de datos y autenticación; encuesta anónima a estudiantes sobre los ajustes; y, con datos históricos, un modelo de redes neuronales que estime el riesgo de deserción.
 
 % ------------------------------------------------------------- Referencias
 \section*{Referencias}
 \addcontentsline{toc}{section}{Referencias}
-\begin{list}{}{\leftmargin=1.27cm \itemindent=-1.27cm \itemsep=6pt}
+\begin{list}{}{\leftmargin=1.27cm \itemindent=-1.27cm \itemsep=5pt}
 \item Brandes, U. (2001). A faster algorithm for betweenness centrality. \emph{Journal of Mathematical Sociology, 25}(2), 163--177. \url{https://doi.org/10.1080/0022250X.2001.9990249}
 \item Congreso de la República de Colombia. (2012). \emph{Ley Estatutaria 1581 de 2012, por la cual se dictan disposiciones generales para la protección de datos personales}.
 \item Congreso de la República de Colombia. (2013). \emph{Ley Estatutaria 1618 de 2013, por medio de la cual se establecen las disposiciones para garantizar el pleno ejercicio de los derechos de las personas con discapacidad}.
@@ -362,34 +440,9 @@ Interfaz web para docentes y unidad de apoyo; foro docente con opción anónima 
 
 % ------------------------------------------------------------- Anexo
 \appendix
-\section{Plan de trabajo en Trello}
-Tablero: \textbf{Proyecto RAI -- Discretas}. Listas: \emph{Pendiente}, \emph{En progreso}, \emph{En revisión}, \emph{Hecho}. Etiquetas: Documento (azul), Ejecutable (verde), Sustentación (naranja), Datos (morado).
+\section{Reproducibilidad y organización del trabajo}
+\textbf{Ejecución.} Repositorio \codigo{github.com/yulet-con/rai-discretas} (rama \codigo{prueba}). Instalar con \codigo{python -m pip install -r requirements.txt}, abrir el panel con \codigo{python -m streamlit run app.py} y ejecutar las pruebas con \codigo{python -m unittest -v}. Todos los resultados de este informe usan universidad, 450 perfiles, 12\,\% y semilla 42.
 
-\begin{table}[H]
-\centering
-\caption{Tarjetas, responsables y fechas}
-\small
-\begin{tabularx}{\textwidth}{p{2cm}Xp{2.1cm}p{2.3cm}}
-\toprule
-Fecha & Tarjeta & Responsable & Etiqueta\\
-\midrule
-Mar 10 nov & Definir roles, crear tablero y subir requisitos del curso & Todos & -- \\
-Mar 10 nov & Entregar el tema por Brightspace & I4 & Documento \\
-Mié 11 nov & Verificar cifras de impacto (SNIES, SIMAT, DANE) y referencias APA & I4 & Documento \\
-Mié 11 nov & Diseñar los CSV y el generador de datos simulados con semilla & I3 & Datos \\
-Mié 11 nov & Implementar lectura de datos y construcción de grafos & I2 & Ejecutable \\
-Jue 12 nov & Implementar grado, cercanía (BFS) e intermediación (Brandes) & I2 & Ejecutable \\
-Jue 12 nov & Implementar coloración Welsh--Powell y $\chi$ exacto & I1 & Ejecutable \\
-Jue 12 nov & Pruebas con casos de resultado conocido (casos 1 y 2, tabla de verdad) & I3 & Ejecutable \\
-Vie 13 nov & Ejecutar simulación universidad y colegio; generar tablas y figuras & I3 & Datos \\
-Vie 13 nov & Redactar modelación y solución en LaTeX & I1 & Documento \\
-Sáb 14 nov & Completar resultados, conclusiones y README & I1, I3 & Documento \\
-Sáb 14 nov & Diapositivas (problema, modelo, resultados, demo) & I4 & Sustentación \\
-Dom 15 nov & Revisión cruzada y entrega en Brightspace (antes de las 8:00 p.\,m.) & Todos & -- \\
-Semana 16 & Ensayo de 10 minutos con cronómetro y preguntas cruzadas & Todos & Sustentación \\
-\bottomrule
-\end{tabularx}
-\end{table}
-\noindent Regla del equipo: cada integrante debe poder explicar el proyecto completo, porque la sustentación (40\,\%) es individual.
+\textbf{Organización.} Las tareas se gestionaron en Trello (Pendiente, En progreso, En revisión, Hecho). La guía del equipo (\codigo{docs/GUIA\_DEL\_EQUIPO.md}) explica la teoría de cada pantalla, el código que la implementa y cómo modificarla, para que cada integrante pueda sustentar el proyecto completo.
 
 \end{document}
