@@ -109,9 +109,9 @@ data/                  CSV de ejemplo (semilla 42, 450 perfiles)
 
 ## Equipo
 
+- Yuletza Cañizalez ([@yulet-con](https://github.com/yulet-con))
+- Mari Eugenia Fonseca ([@maryfp12](https://github.com/maryfp12))
+- Wendy Osorio ([@wens1612](https://github.com/wens1612))
 - Asmaa Tarabein ([@AsmaaTarabein](https://github.com/AsmaaTarabein))
-- Mari ([@maryfp12](https://github.com/maryfp12))
-- [Integrante 3]
-- [Integrante 4]
 
 Profesor: MSc Iván Gómez.
