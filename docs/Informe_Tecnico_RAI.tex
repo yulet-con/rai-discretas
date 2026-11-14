@@ -69,7 +69,7 @@ Asmaa Tarabein\par}
 
 % ------------------------------------------------------------- Resumen
 \section*{Resumen}
-En la universidad existe un proceso formal de apoyo a estudiantes con condiciones diversas, pero en la práctica los profesores suelen enterarse cuando el estudiante ya está perdiendo el corte o cuando, por el estrés, llega a psicología. Muchos estudiantes no se identifican, y los profesores no siempre saben cómo adaptar sus clases. Este proyecto propone la \emph{Red de Apoyo Inclusivo} (RAI), una plataforma administrada por la unidad de apoyo (Bienestar Universitario u Orientación Escolar) con dos capas: una encuesta de perfil de aprendizaje para \emph{todos} los estudiantes, que no señala a nadie, y la conexión con el proceso que ya existe para quienes necesitan ajustes. Con eso, desde la primera semana, cada profesor conoce cómo aprende su grupo, las necesidades comunes de su curso y herramientas concretas, sin conocer diagnósticos. El problema se modela con conjuntos y funciones, álgebra booleana (el indicador de apoyo $\bullet = p\cdot q\cdot r\cdot a$ y las alertas) y análisis de redes (centralidad para priorizar y convocar, grado cero y componentes conexas para detectar aislamiento). Se construyó un ejecutable propio en Python que simula la entrada de 300 a 600 encuestas y recorre el semestre en siete etapas, validado con 15 pruebas de resultado conocido. En la simulación de referencia, la proporción de necesidades que el profesor conoce el primer día pasa de 32\,\% a 84\,\%, los estudiantes aislados bajan de 14 a 2 y la aprobación esperada de los estudiantes con alguna necesidad sube de 61\,\% a 72\,\%.
+En la universidad existe un proceso formal de apoyo a estudiantes con condiciones diversas, pero en la práctica los profesores suelen enterarse cuando el estudiante ya está perdiendo el corte o cuando, por el estrés, llega a psicología. Muchos estudiantes no se identifican, y los profesores no siempre saben cómo adaptar sus clases. Este proyecto propone la \emph{Red de Apoyo Inclusivo} (RAI), una plataforma administrada por la unidad de apoyo (Bienestar Universitario u Orientación Escolar) con dos capas: una encuesta de perfil de aprendizaje para \emph{todos} los estudiantes, que no señala a nadie, y la conexión con el proceso que ya existe para quienes necesitan ajustes. Con eso, desde la primera semana, cada profesor conoce cómo aprende su grupo, las necesidades comunes de su curso y herramientas concretas, sin conocer diagnósticos. El problema se modela con conjuntos y funciones, álgebra booleana (el indicador de apoyo $I = p\cdot q\cdot r\cdot a$ y las alertas) y análisis de redes (centralidad para priorizar y convocar, grado cero y componentes conexas para detectar aislamiento). Se construyó un ejecutable propio en Python que simula la entrada de 300 a 600 encuestas y recorre el semestre en siete etapas, validado con 15 pruebas de resultado conocido. En la simulación de referencia, la proporción de necesidades que el profesor conoce el primer día pasa de 32\,\% a 84\,\%, los estudiantes aislados bajan de 14 a 2 y la aprobación esperada de los estudiantes con alguna necesidad sube de 61\,\% a 72\,\%.
 
 \noindent\textbf{Palabras clave:} inclusión educativa, álgebra booleana, análisis de redes, centralidad, perfil de aprendizaje.
 
@@ -156,13 +156,13 @@ Psicosocial & \{Clima y anticipación\} \\
 \end{table}
 
 \subsection{Álgebra booleana: privacidad y alerta}
-Para un estudiante y un curso se definen cuatro variables booleanas: $p$ = está inscrito; $q$ = tiene una necesidad registrada en el programa; $r$ = dio su consentimiento este semestre; $a$ = el programa académico autorizó los ajustes. El indicador que ve el profesor junto al nombre es
+Para un estudiante y un curso se definen cuatro variables booleanas: $p$~= está inscrito; $q$~= tiene una necesidad registrada en el programa; $r$~= dio su consentimiento este semestre; $a$~= el programa académico autorizó los ajustes. El indicador $I$ (en el panel, un círculo junto al nombre del estudiante) es
 \[
-\bullet \;=\; p\cdot q\cdot r\cdot a ,
+I \;=\; p\cdot q\cdot r\cdot a ,
 \]
-un AND de cuatro variables: de las $2^4=16$ combinaciones, solo $p=q=r=a=1$ lo enciende. El indicador dice \emph{que} el estudiante tiene apoyo, nunca \emph{qué} tiene. Con $t$ = ``la nota del primer corte es menor que 3,0'', la alerta automática a la unidad de apoyo es
+un AND de cuatro variables: de las $2^4=16$ combinaciones, solo $p=q=r=a=1$ lo enciende. El indicador dice \emph{que} el estudiante tiene apoyo, nunca \emph{qué} tiene. Con $t$~= ``la nota del primer corte es menor que 3,0'', la alerta automática a la unidad de apoyo es
 \[
-\text{alerta} \;=\; \bullet \cdot t .
+\text{alerta} \;=\; I \cdot t .
 \]
 Complementa las alertas institucionales: es por curso, llega a mitad de semestre y conecta la nota con una necesidad registrada.
 
@@ -198,7 +198,7 @@ Vértice del grafo de cursos & Curso (grupos variables) & Asignatura y grupo (fi
 \subsection{Arquitectura}
 La aplicación tiene una vista de demostración, \emph{Iniciar semestre}, y la estructura en árbol de la propuesta: la unidad de apoyo como raíz y tres ramas (apoyo académico, integración y comunidad docente). El código separa el cálculo de la presentación: \codigo{rai/grafos.py} (algoritmos de grafos propios, sin librerías de grafos), \codigo{rai/modelo.py} (encuesta, conjuntos, reglas booleanas y construcción de grafos), \codigo{rai/simulacion.py} y \codigo{rai/semestre.py} (datos y escenarios) y \codigo{app.py} (interfaz).
 
-\textbf{Iniciar semestre.} Se generan de 300 a 600 encuestas o se cargan seis archivos CSV, y el semestre se recorre en siete etapas, cada una con la teoría que usa: llegada de encuestas (conjuntos), cruce con el proceso existente ($p\cdot q\cdot r\cdot a$), paneles de los profesores (funciones), planeación (análisis de redes), integración (grado 0 y componentes), primer corte ($\bullet\cdot t$) y resultados a los tres meses.
+\textbf{Iniciar semestre.} Se generan de 300 a 600 encuestas o se cargan seis archivos CSV, y el semestre se recorre en siete etapas, cada una con la teoría que usa: llegada de encuestas (conjuntos), cruce con el proceso existente ($p\cdot q\cdot r\cdot a$), paneles de los profesores (funciones), planeación (análisis de redes), integración (grado 0 y componentes), primer corte ($I\cdot t$) y resultados a los tres meses.
 
 \subsection{Algoritmos}
 \begin{itemize}
@@ -291,7 +291,7 @@ Expresión Oral y Escrita (1) & 11 & 0,60 & 0,114 \\
 
 \textbf{Integración.} Con 12 actividades abiertas a todos (402 participantes), los estudiantes aislados bajan de 14 a 2 y los grupos separados de la red de compañeros, de 15 a 3.
 
-\textbf{Alertas.} En el primer corte se generan 84 alertas (parejas estudiante--curso con $\bullet\cdot t=1$).
+\textbf{Alertas.} En el primer corte se generan 84 alertas (parejas estudiante--curso con $I\cdot t=1$).
 
 \textbf{Colegio.} Con la misma configuración, el grafo de cursos queda en 6 componentes, una por grupo, porque los estudiantes de un grupo comparten todas las asignaturas; ahí la centralidad útil es la del grafo de profesores. Los aislados bajan de 9 a 3.
 
@@ -346,7 +346,7 @@ La mayor ganancia está en el tiempo y en el alcance: con RAI el profesor sabe e
 
 \subsection{Conclusiones}
 \begin{itemize}
-  \item La teoría del curso convierte un problema social en decisiones concretas: qué ve el profesor ($p\cdot q\cdot r\cdot a$), cuándo hay alerta ($\bullet\cdot t$), qué herramientas recibe (funciones), por dónde empezar y a quién convocar (centralidad) y quién está solo (grado cero y componentes).
+  \item La teoría del curso convierte un problema social en decisiones concretas: qué ve el profesor ($p\cdot q\cdot r\cdot a$), cuándo hay alerta ($I\cdot t$), qué herramientas recibe (funciones), por dónde empezar y a quién convocar (centralidad) y quién está solo (grado cero y componentes).
   \item El perfil para todos amplía el alcance del proceso existente sin señalar a nadie.
   \item El valor principal es \emph{preventivo}: la planeación ocurre antes de la primera nota y complementa, sin reemplazar, el programa para la diversidad, el CEDU y las alertas institucionales.
   \item El mismo modelo sirve para universidades y colegios cambiando solo parámetros.
