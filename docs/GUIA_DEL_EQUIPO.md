@@ -125,6 +125,13 @@ grafos (densidad ≤ 40 %); el número sale de los datos. Cada docente dicta var
 dos docentes comparten más estudiantes que dos cursos. Con 4, el grafo de docentes tenía el 89 % de
 las aristas posibles y todos salían con grado 11 y cercanía 1,00.
 
+**Pregunta probable:** *"¿Y en un colegio?"* → En un colegio todas las materias de un salón (9A)
+tienen **los mismos estudiantes**. Entonces cada salón es una **componente conexa completa** K8: sus
+8 materias están unidas entre sí y con ninguna otra (6 salones → 6 componentes). En un grafo
+completo todos los vértices son iguales, así que la intermediación es 0 y la centralidad no elige un
+curso. Por eso, en modo colegio, el panel **prioriza salones** (cuántos estudiantes con apoyo tiene
+cada uno), y lo que conecta los salones son los **docentes**, que dictan en varios salones.
+
 ---
 
 ## 6. 1 · Apoyo académico (lo que ve el docente)

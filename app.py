@@ -90,9 +90,10 @@ def barras_h(etiquetas, valores, color, alto=260, sufijo="", rango=None):
     st.plotly_chart(fig, width="stretch")
 
 
-def dibujar_grafo(g, etiqueta=None, color_por=None, tam_por=None, alto=420):
-    """Dibujo circular: tamaño del vértice = grado (o tam_por), color = medida."""
-    vs = sorted(g.vertices())
+def dibujar_grafo(g, etiqueta=None, color_por=None, tam_por=None, alto=420, orden=None, categorias=False):
+    """Dibujo circular: tamaño del vértice = grado (o tam_por), color = medida.
+    `orden`: lista de vértices en el orden del círculo (p. ej., agrupados por componente)."""
+    vs = list(orden) if orden else sorted(g.vertices())
     n = max(len(vs), 1)
     pos = {v: (math.cos(2 * math.pi * i / n), math.sin(2 * math.pi * i / n)) for i, v in enumerate(vs)}
     ex, ey = [], []
@@ -102,7 +103,15 @@ def dibujar_grafo(g, etiqueta=None, color_por=None, tam_por=None, alto=420):
     gr = G.grado(g)
     tam = tam_por or gr
     tmax = max(tam.values()) or 1
-    marcador = dict(color=[(color_por or tam)[v] for v in vs], colorscale=ESCALA, showscale=True,
+    colores = [(color_por or tam)[v] for v in vs]
+    # Si la medida vale lo mismo en todos los vértices, la barra de color no informa nada.
+    escala = ESCALA
+    if categorias:   # un color de la paleta por grupo (p. ej., por salón), sin barra de color
+        pal = [PRINCIPAL, NARANJA, ROSA, VERDE, MARINO, GRIS]
+        k = max(colores) + 1 if colores else 1
+        colores = [x / max(k - 1, 1) for x in colores]
+        escala = [[i / max(k - 1, 1), pal[i % len(pal)]] for i in range(k)] if k > 1 else ESCALA
+    marcador = dict(color=colores, colorscale=escala, showscale=len(set(colores)) > 1 and not categorias,
                     colorbar=dict(thickness=10, len=0.6), line=dict(width=1, color="#031842"),
                     size=[14 + 26 * tam[v] / tmax for v in vs])
     fig = go.Figure([
@@ -490,16 +499,48 @@ elif pagina == RAMAS[1]:
     with st.expander("Σ Cómo funciona: qué cursos priorizar (análisis de redes)"):
         gc = M.grafo_cursos(datos, UMBRAL_CURSOS)
         gr, ce, bt = G.grado(gc), G.cercania(gc), G.intermediacion(gc, normalizada=True)
+        comps = sorted((sorted(c) for c in G.componentes_conexas(gc)), key=lambda c: c[0])
+        # Colegio: todas las materias de un salón tienen los mismos estudiantes, así que cada salón es
+        # una componente completa (K_n). Todos sus vértices son simétricos y la intermediación es 0.
+        por_salon = len(comps) > 1 and all(gr[v] == len(c) - 1 for c in comps for v in c) \
+            and not any(bt.values())
         a, b = st.columns([3, 2])
         with a:
-            dibujar_grafo(gc, nombre_curso, color_por=bt)
-            st.caption(f"Vértice = curso. Arista = comparten al menos {UMBRAL_CURSOS} estudiante{'s' if UMBRAL_CURSOS != 1 else ''} con apoyo. "
-                       "Tamaño = grado · color = intermediación. El umbral es el menor que deja el grafo "
-                       f"con densidad ≤ {M.DENSIDAD_MAXIMA:.0%}: así la centralidad distingue cursos.")
+            if por_salon:
+                comp_de = {v: i for i, c in enumerate(comps) for v in c}
+                dibujar_grafo(gc, nombre_curso, color_por=comp_de, orden=[v for c in comps for v in c], categorias=True)
+                k = len(comps[0])
+                st.caption(f"Vértice = curso. Arista = comparten al menos {UMBRAL_CURSOS} estudiante"
+                           f"{'s' if UMBRAL_CURSOS != 1 else ''} con apoyo. Color = salón.")
+            else:
+                dibujar_grafo(gc, nombre_curso, color_por=bt)
+                st.caption(f"Vértice = curso. Arista = comparten al menos {UMBRAL_CURSOS} estudiante"
+                           f"{'s' if UMBRAL_CURSOS != 1 else ''} con apoyo. "
+                           "Tamaño = grado · color = intermediación. El umbral es el menor que deja el grafo "
+                           f"con densidad ≤ {M.DENSIDAD_MAXIMA:.0%}: así la centralidad distingue cursos.")
         with b:
-            tabla(sorted(({"Curso": nombre_curso[v], "Grado": gr[v], "Cercanía": f"{ce[v]:.2f}",
-                           "Intermediación": f"{bt[v]:.3f}"} for v in gc.vertices()),
-                         key=lambda f: -float(f["Intermediación"]))[:8])
+            if por_salon:
+                st.markdown(f"**El grafo se divide en {len(comps)} componentes conexas, una por salón.** "
+                            f"En un colegio todas las materias de un salón tienen los mismos estudiantes, así que "
+                            f"cada salón es un grafo completo K{k}: sus {k} materias están unidas entre sí y "
+                            "con ninguna otra. Como todos los vértices de un K_n son iguales, la intermediación es 0 "
+                            "y la centralidad no elige un curso. Por eso en colegio **se prioriza el salón**, "
+                            "y lo que conecta salones son los docentes (ver Comunidad docente).")
+                vis = M.visibles(datos)
+                ins = {}
+                for r in datos["inscripciones"]:
+                    ins.setdefault(r["curso_id"], set()).add(r["estudiante_id"])
+                grupo_de = {cu["id"]: cu["grupo"] for cu in datos["cursos"]}
+                filas = []
+                for c in comps:
+                    est_salon = set().union(*(ins.get(v, set()) for v in c))
+                    filas.append({"Salón": grupo_de[c[0]], "Estudiantes": len(est_salon),
+                                  "Con apoyo": len(est_salon & vis)})
+                tabla(sorted(filas, key=lambda f: -f["Con apoyo"]))
+            else:
+                tabla(sorted(({"Curso": nombre_curso[v], "Grado": gr[v], "Cercanía": f"{ce[v]:.2f}",
+                               "Intermediación": f"{bt[v]:.3f}"} for v in gc.vertices()),
+                             key=lambda f: -float(f["Intermediación"]))[:8])
 
 
 # ================================================================ 1. Apoyo académico
