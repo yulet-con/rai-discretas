@@ -22,25 +22,33 @@ from rai.catalogo import INSTITUCIONES, NECESIDADES_COMUNES
 from rai.semestre import simular_semestre
 from rai.simulacion import TABLAS, cargar_textos, faltantes, simular
 
-MORADO, AZUL, VERDE, NARANJA, GRIS, ROSA = "#7C3AED", "#2563EB", "#059669", "#D97706", "#64748B", "#DB2777"
-FONDO = {MORADO: "#F5F3FF", AZUL: "#DBEAFE", VERDE: "#D1FAE5", NARANJA: "#FEF3C7", ROSA: "#FCE7F3", GRIS: "#F1F5F9"}
+# Paleta RAI: la misma de la presentación (plantilla de piezas de rompecabezas).
+# Azul de la unidad de apoyo, naranja y rosa de las piezas, marino para el texto.
+PRINCIPAL, MARINO, VERDE, NARANJA, GRIS, ROSA = "#0075B2", "#031842", "#1E8A62", "#E08A12", "#5B6B7F", "#E0489F"
+ROJO = "#B42A10"
+FONDO = {PRINCIPAL: "#E6F2F9", MARINO: "#E8ECF3", VERDE: "#E3F3EC", NARANJA: "#FDF1DE", ROSA: "#FDE8F4",
+         GRIS: "#F2F6FA"}
+ESCALA = [[0, "#F2F6FA"], [0.5, "#7FBFE2"], [1, "#0075B2"]]   # color de los vértices en los grafos
 
-st.set_page_config(page_title="RAI · Red de Apoyo Inclusivo", page_icon="🤝", layout="wide")
+st.set_page_config(page_title="RAI · Red de Apoyo Inclusivo", page_icon="🧩", layout="wide")
 st.markdown("""
 <style>
 .rai-tabla {width:100%;border-collapse:collapse;font-size:0.92rem}
-.rai-tabla th {text-align:left;border-bottom:2px solid #CBD5E1;padding:6px 8px;color:#334155}
-.rai-tabla td {border-bottom:1px solid #E2E8F0;padding:6px 8px;vertical-align:top}
-.rai-nota {color:#64748B;font-size:0.85rem}
+.rai-tabla th {text-align:left;border-bottom:2px solid #C9D6E3;padding:6px 8px;color:#031842}
+.rai-tabla td {border-bottom:1px solid #E3EAF2;padding:6px 8px;vertical-align:top}
+.rai-nota {color:#5B6B7F;font-size:0.85rem}
 .rai-hero {border-radius:12px;padding:16px 22px;font-size:1.2rem;margin:6px 0 16px}
 .rai-num {font-size:2.3rem;font-weight:700;margin-right:6px}
 .rai-rama {border:2px solid;border-radius:14px;padding:16px 18px;height:100%}
 .rai-rama h4 {margin:0 0 8px 0}
 .rai-rama .big {font-size:1.9rem;font-weight:700;line-height:1.1}
-.rai-post {border:1px solid #E2E8F0;border-radius:10px;padding:10px 14px;margin-bottom:8px}
+.rai-post {border:1px solid #E3EAF2;border-radius:10px;padding:10px 14px;margin-bottom:8px}
 .rai-paso {border-radius:10px;padding:6px 8px;font-size:0.78rem;text-align:center;line-height:1.2;height:100%}
-.rai-teoria {background:#F5F3FF;border-left:5px solid #7C3AED;border-radius:8px;padding:10px 14px;margin-top:10px}
-.rai-formula {font-size:1.6rem;font-weight:700;color:#7C3AED;text-align:center;padding:6px}
+.rai-teoria {background:#E6F2F9;border-left:5px solid #0075B2;border-radius:8px;padding:10px 14px;margin-top:10px}
+.rai-marca {display:flex;gap:4px;margin-top:8px}
+.rai-marca span {height:5px;flex:1;border-radius:3px}
+h1, h2, h3 {color:#031842}
+.rai-formula {font-size:1.6rem;font-weight:700;color:#0075B2;text-align:center;padding:6px}
 </style>""", unsafe_allow_html=True)
 
 
@@ -94,11 +102,11 @@ def dibujar_grafo(g, etiqueta=None, color_por=None, tam_por=None, alto=420):
     gr = G.grado(g)
     tam = tam_por or gr
     tmax = max(tam.values()) or 1
-    marcador = dict(color=[(color_por or tam)[v] for v in vs], colorscale="Purples", showscale=True,
-                    colorbar=dict(thickness=10, len=0.6), line=dict(width=1, color="#4C1D95"),
+    marcador = dict(color=[(color_por or tam)[v] for v in vs], colorscale=ESCALA, showscale=True,
+                    colorbar=dict(thickness=10, len=0.6), line=dict(width=1, color="#031842"),
                     size=[14 + 26 * tam[v] / tmax for v in vs])
     fig = go.Figure([
-        go.Scatter(x=ex, y=ey, mode="lines", line=dict(width=0.6, color="#CBD5E1"), hoverinfo="skip"),
+        go.Scatter(x=ex, y=ey, mode="lines", line=dict(width=0.6, color="#C9D6E3"), hoverinfo="skip"),
         go.Scatter(x=[pos[v][0] for v in vs], y=[pos[v][1] for v in vs], mode="markers+text",
                    text=[(etiqueta or {}).get(v, v) for v in vs], textposition="top center",
                    textfont=dict(size=10), marker=marcador,
@@ -181,8 +189,11 @@ INICIO, GUIA = "▶ Iniciar semestre", "📘 Guía del equipo"
 RAMAS = [INICIO, "🏛️ Bienestar", "1 · Apoyo académico", "2 · Integración", "3 · Comunidad docente",
          "✓ Pruebas", GUIA]
 with st.sidebar:
-    st.markdown(f"<h2 style='color:{MORADO};margin-bottom:0'>RAI</h2>"
-                "<div class='rai-nota'>Red de Apoyo Inclusivo</div>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='color:{PRINCIPAL};margin-bottom:0'>🧩 RAI</h2>"
+                "<div class='rai-nota'>Red de Apoyo Inclusivo</div>"
+                f"<div class='rai-marca'><span style='background:{PRINCIPAL}'></span>"
+                f"<span style='background:{NARANJA}'></span><span style='background:{ROSA}'></span>"
+                f"<span style='background:{MARINO}'></span></div>", unsafe_allow_html=True)
     st.write("")
     pagina = st.radio("Ir a", RAMAS, label_visibility="collapsed")
     st.write("")
@@ -255,8 +266,8 @@ if pagina == INICIO:
     cols = st.columns(len(ETAPAS))
     for i, (col, (sem, nom, teo)) in enumerate(zip(cols, ETAPAS)):
         hecho, actual = i < etapa, i == etapa
-        fondo = MORADO if actual else ("#D1FAE5" if hecho else "#F1F5F9")
-        texto = "white" if actual else ("#065F46" if hecho else "#64748B")
+        fondo = PRINCIPAL if actual else ("#E3F3EC" if hecho else "#F2F6FA")
+        texto = "white" if actual else ("#14603F" if hecho else "#5B6B7F")
         marca = "✓ " if hecho else ""
         col.markdown(f"<div class='rai-paso' style='background:{fondo};color:{texto}'><b>{marca}{sem}</b>"
                      f"<br>{nom}</div>", unsafe_allow_html=True)
@@ -272,16 +283,16 @@ if pagina == INICIO:
         caja = st.empty()
         if st.session_state.pop("animar", False):
             for k in range(0, len(est) + 1, max(1, len(est) // 30)):
-                caja.markdown(f"<div class='rai-formula' style='color:{AZUL}'>{k} encuestas recibidas</div>",
+                caja.markdown(f"<div class='rai-formula' style='color:{MARINO}'>{k} encuestas recibidas</div>",
                               unsafe_allow_html=True)
                 time.sleep(0.04)
-        caja.markdown(f"<div class='rai-formula' style='color:{AZUL}'>{len(est)} encuestas recibidas</div>",
+        caja.markdown(f"<div class='rai-formula' style='color:{MARINO}'>{len(est)} encuestas recibidas</div>",
                       unsafe_allow_html=True)
         izq, der = st.columns([3, 2])
         with izq:
             st.markdown("**Cómo aprende la institución** (% de estudiantes de acuerdo)")
             perfil = M.perfil_grupo(datos)
-            barras_h([f["pregunta"] for f in perfil], [100 * f["porcentaje"] for f in perfil], AZUL,
+            barras_h([f["pregunta"] for f in perfil], [100 * f["porcentaje"] for f in perfil], MARINO,
                      alto=280, sufijo=" %", rango=[0, 100])
         with der:
             con_alguna = sum(1 for e in datos["estudiantes"] if M.necesidades_por_perfil(e))
@@ -324,7 +335,7 @@ if pagina == INICIO:
         with a:
             hero(GRIS, f"{100 * S['informados_sin']:.0f} %", " de las necesidades llegan a tiempo con el proceso actual")
         with b:
-            hero(MORADO, f"{100 * S['informados_con']:.0f} %", " llegan desde la semana 1 con RAI")
+            hero(PRINCIPAL, f"{100 * S['informados_con']:.0f} %", " llegan desde la semana 1 con RAI")
         c_ej = max(cursos, key=lambda c: M.panel_curso(datos, c)["con_apoyo"])
         p = M.panel_curso(datos, c_ej)
         miembros = M.miembros_por_curso(datos)[c_ej]
@@ -335,11 +346,11 @@ if pagina == INICIO:
             st.caption("Necesidades comunes (capa 2)")
             orden = sorted(p["por_necesidad"], key=lambda k: -p["por_necesidad"][k])
             barras_h([NECESIDADES_COMUNES[k]["nombre"] for k in orden], [p["por_necesidad"][k] for k in orden],
-                     MORADO, alto=220)
+                     PRINCIPAL, alto=220)
         with der:
             st.caption("Cómo aprende el grupo completo (capa 1, encuesta de todos)")
             perfil = sorted(M.perfil_grupo(datos, miembros), key=lambda f: -f["porcentaje"])[:3]
-            barras_h([f["pregunta"] for f in perfil], [100 * f["porcentaje"] for f in perfil], AZUL,
+            barras_h([f["pregunta"] for f in perfil], [100 * f["porcentaje"] for f in perfil], MARINO,
                      alto=220, sufijo=" %", rango=[0, 100])
         teoria("funciones. f: categoría → necesidades comunes (capa 2) y encuesta → necesidades (capa 1). "
                "El profesor ve qué hacer, nunca un diagnóstico.")
@@ -384,7 +395,7 @@ if pagina == INICIO:
         with a:
             hero(GRIS, "Al final", ": con el proceso actual, la alerta llega cuando el promedio ya bajó")
         with b:
-            hero(MORADO, S["alertas_corte1"], " alertas por curso, a mitad de semestre, con RAI")
+            hero(PRINCIPAL, S["alertas_corte1"], " alertas por curso, a mitad de semestre, con RAI")
         st.markdown("<div class='rai-formula'>alerta = ● · t</div>", unsafe_allow_html=True)
         st.caption("t: la nota del primer corte es menor que 3,0. El profesor no llena nada: la alerta llega sola.")
         tabla([{"Estudiante": x["nombre"], "Curso": nombre_curso[x["curso_id"]],
@@ -408,7 +419,7 @@ if pagina == INICIO:
         fig = go.Figure(go.Bar(
             x=["Con necesidad · proceso actual", "Con necesidad · con RAI", "Resto de estudiantes"],
             y=[100 * S["aprob_sin"], 100 * S["aprob_con"], 100 * S["aprob_resto"]],
-            marker_color=[GRIS, MORADO, "#CBD5E1"], text=[pct(S["aprob_sin"]), pct(S["aprob_con"]), pct(S["aprob_resto"])],
+            marker_color=[GRIS, PRINCIPAL, "#C9D6E3"], text=[pct(S["aprob_sin"]), pct(S["aprob_con"]), pct(S["aprob_resto"])],
             textposition="outside", cliponaxis=False))
         fig.update_layout(height=280, plot_bgcolor="white", margin=dict(l=10, r=10, t=10, b=10),
                           yaxis=dict(range=[0, 100], title="% aprobación"))
@@ -431,7 +442,7 @@ elif pagina == RAMAS[1]:
     st.caption(f"{len(est)} estudiantes · {len(cursos)} cursos · {len(docentes)} docentes")
 
     c1, c2, c3 = st.columns(3)
-    rama(c1, AZUL, "1 · Apoyo académico", f"{len(R['alertas'])} alertas",
+    rama(c1, MARINO, "1 · Apoyo académico", f"{len(R['alertas'])} alertas",
          f"de mitad de semestre · {len(visibles)} estudiantes con apoyo registrado")
     rama(c2, VERDE, "2 · Integración", f"{len(R['aislados_antes'])} → {len(R['aislados_despues'])}",
          f"estudiantes aislados antes → después · {len(R['part'])} actividades abiertas a todos")
@@ -501,7 +512,7 @@ elif pagina == RAMAS[2]:
     for tab, c in zip(st.tabs([nombre_curso[c] for c in mis_cursos]), mis_cursos):
         with tab:
             p = M.panel_curso(datos, c)
-            hero(AZUL, p["con_apoyo"], f" de {p['total']} estudiantes tienen apoyo registrado")
+            hero(MARINO, p["con_apoyo"], f" de {p['total']} estudiantes tienen apoyo registrado")
 
             st.markdown("#### Cómo aprende tu grupo")
             perfil = sorted(M.perfil_grupo(datos, miembros_de.get(c, set())), key=lambda f: -f["porcentaje"])
@@ -528,10 +539,10 @@ elif pagina == RAMAS[2]:
             for f in M.lista_curso(datos, c):
                 if solo and not f["apoyo"]:
                     continue
-                color = "#DC2626" if f["nota"] < M.NOTA_MINIMA else "#059669"
+                color = "#B42A10" if f["nota"] < M.NOTA_MINIMA else "#1E8A62"
                 filas.append({
                     "Estudiante": html.escape(f["nombre"]),
-                    "Apoyo": f"<span style='color:{AZUL};font-size:1.1rem'>●</span>" if f["apoyo"] else "",
+                    "Apoyo": f"<span style='color:{MARINO};font-size:1.1rem'>●</span>" if f["apoyo"] else "",
                     "Nota corte 1": f"<b style='color:{color}'>{f['nota']:.1f}</b>",
                     "Estado": ("⚠️ " + conf["unidad_apoyo"] + " ya fue avisado") if f["alerta"] else "",
                 })
