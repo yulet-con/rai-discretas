@@ -204,6 +204,19 @@ La red es de todos y cada quien llega por lo que le gusta.
 
 ---
 
+### Retroalimentación para Bienestar
+
+**¿Sirven las herramientas?** En cada herramienta el docente vota 👍/👎 (botón «Herramientas»).
+Bienestar ve solo el % útil por herramienta y las que tienen menos de 60 % para revisarlas con los
+docentes. Es una razón: útiles / total de votos. Los votos iniciales son simulados
+(`modelo.valoraciones_simuladas`).
+
+**Pregunta probable:** *"¿Bienestar lee el foro?"* → No. El foro es de los profesores, para que
+hablen con confianza y no quede un registro sobre estudiantes. Bienestar recibe solo lo que el
+docente decide enviarle (observaciones) y el resumen anónimo de los votos.
+
+---
+
 ## 8. 3 · Comunidad docente
 
 **Qué ve el usuario.** Un foro (con opción anónima), mentores sugeridos y colegas por invitar.

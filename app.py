@@ -165,6 +165,7 @@ nombre_curso = {c["id"]: f'{c["asignatura"]} ({c["grupo"]})' for c in datos["cur
 visibles = M.visibles(datos)
 st.session_state.setdefault("solicitudes", [])
 st.session_state.setdefault("observaciones", [])
+st.session_state.setdefault("mis_votos", {})   # (curso, herramienta) -> True (👍) / False (👎)
 st.session_state.setdefault("foro", [
     {"autor": "Anónimo", "tema": "Tiempo y ritmo",
      "texto": "Dividir el parcial en dos partes cortas me funcionó muy bien con todo el grupo."},
@@ -496,6 +497,32 @@ elif pagina == RAMAS[1]:
         else:
             st.info("Aún no hay observaciones. Los docentes las envían desde «1 · Apoyo académico».")
 
+    st.write("")
+    st.subheader("¿Sirven las herramientas?")
+    votos = {h: list(v) for h, v in M.valoraciones_simuladas(datos, cfg["semilla"]).items()}
+    for (_, h), util in st.session_state["mis_votos"].items():
+        votos.setdefault(h, [0, 0])[0 if util else 1] += 1
+    resumen = M.resumen_utilidad(votos)
+    if resumen:
+        izq, der = st.columns([3, 2])
+        with izq:
+            barras_h([f["Herramienta"] for f in resumen], [100 * f["Útil"] for f in resumen], PRINCIPAL,
+                     alto=28 * len(resumen) + 40, sufijo=" %", rango=[0, 100])
+        with der:
+            total = sum(f["Votos"] for f in resumen)
+            st.metric("Votos de docentes", total)
+            revisar = [f for f in resumen if f["Útil"] < 0.6]
+            st.markdown("**Para revisar con los docentes** (menos de 60 % útil):")
+            if revisar:
+                tabla([{"Herramienta": f["Herramienta"], "Necesidad": f["Necesidad"],
+                        "Útil": f"{f['Útil']:.0%}", "Votos": f["Votos"]} for f in revisar])
+            else:
+                st.success("Todas las herramientas superan el 60 %.")
+        st.caption("Los docentes votan 👍/👎 en «1 · Apoyo académico». Solo se muestra el % por herramienta, "
+                   "sin nombres de docentes ni de estudiantes. El foro de la comunidad docente es privado: "
+                   "la unidad de apoyo no lo lee. Votos iniciales simulados (supuesto en "
+                   "`modelo.valoraciones_simuladas`).")
+
     with st.expander("Σ Cómo funciona: qué cursos priorizar (análisis de redes)"):
         gc = M.grafo_cursos(datos, UMBRAL_CURSOS)
         gr, ce, bt = G.grado(gc), G.cercania(gc), G.intermediacion(gc, normalizada=True)
@@ -571,8 +598,17 @@ elif pagina == RAMAS[2]:
                                     f"<b>{nec['nombre']}</b><br><span class='rai-nota'>"
                                     f"{p['por_necesidad'][k]} estudiantes</span>", unsafe_allow_html=True)
                         with st.popover("Herramientas", width="stretch"):
-                            for h in nec["herramientas"]:
-                                st.markdown(f"- {h}")
+                            st.caption("¿Te sirvió? Tu voto es anónimo: la unidad de apoyo solo ve el % por herramienta.")
+                            for i, h in enumerate(nec["herramientas"]):
+                                t, si, no = st.columns([6, 1, 1])
+                                voto = st.session_state["mis_votos"].get((c, h))
+                                t.markdown(f"{h}" + (" ✓" if voto is not None else ""))
+                                if si.button("👍", key=f"si-{c}-{k}-{i}", type="primary" if voto is True else "secondary"):
+                                    st.session_state["mis_votos"][(c, h)] = True
+                                    st.rerun()
+                                if no.button("👎", key=f"no-{c}-{k}-{i}", type="primary" if voto is False else "secondary"):
+                                    st.session_state["mis_votos"][(c, h)] = False
+                                    st.rerun()
 
             st.markdown("#### Lista de clase · corte de mitad de semestre")
             solo = st.toggle("Ver solo estudiantes con apoyo", value=True, key=f"solo-{c}")

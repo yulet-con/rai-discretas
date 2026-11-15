@@ -210,6 +210,34 @@ def panel_curso(datos, curso_id):
 ESTADOS_SOLICITUD = ["Pendiente", "Agendada", "Realizada"]
 
 
+def valoraciones_simuladas(datos, semilla=0, prob_uso=0.6):
+    """Votos 👍/👎 que darían los docentes a las herramientas durante el semestre.
+
+    Supuesto: en cada curso, el docente prueba cada herramienta de sus necesidades comunes con
+    probabilidad `prob_uso`; cada herramienta tiene una utilidad base (entre 55 % y 90 %) y el voto
+    es 👍 con esa probabilidad. Devuelve {herramienta: [utiles, no_utiles]}, sin nombres.
+    """
+    import random
+    rng = random.Random(semilla + 3)
+    base = {h: rng.uniform(0.55, 0.9) for n in NECESIDADES_COMUNES.values() for h in n["herramientas"]}
+    votos = {}
+    for c in datos["cursos"]:
+        for k in panel_curso(datos, c["id"])["por_necesidad"]:
+            for h in NECESIDADES_COMUNES[k]["herramientas"]:
+                if rng.random() < prob_uso:
+                    v = votos.setdefault(h, [0, 0])
+                    v[0 if rng.random() < base[h] else 1] += 1
+    return votos
+
+
+def resumen_utilidad(votos):
+    """Tabla para la unidad de apoyo: % útil por herramienta (útiles / total de votos)."""
+    necesidad_de = {h: n["nombre"] for n in NECESIDADES_COMUNES.values() for h in n["herramientas"]}
+    filas = [{"Herramienta": h, "Necesidad": necesidad_de.get(h, ""), "Votos": si + no,
+              "Útil": si / (si + no)} for h, (si, no) in votos.items() if si + no]
+    return sorted(filas, key=lambda f: -f["Útil"])
+
+
 def solicitudes_simuladas(datos, semilla=0, prob=0.5, minimo=3, umbral_docentes=None):
     """Solicitudes de planeación que harían los docentes en las semanas 1 a 3.
 

@@ -6,7 +6,7 @@ import unittest
 from itertools import product
 
 from rai.grafos import Grafo, aislados, cercania, componentes_conexas, grado, intermediacion
-from rai.modelo import (alertas, densidad, lista_curso, umbral_adaptativo, mostrar_ajuste, necesidades_comunes,
+from rai.modelo import (alertas, densidad, lista_curso, resumen_utilidad, umbral_adaptativo, mostrar_ajuste, necesidades_comunes,
                         necesidades_por_perfil, panel_curso, perfil_grupo, visibles)
 from rai.semestre import simular_semestre
 from rai.simulacion import simular
@@ -168,6 +168,15 @@ class CasoSemestre(unittest.TestCase):
         r = simular_semestre(d)
         self.assertGreaterEqual(r["aprob_con"], r["aprob_sin"])
         self.assertGreater(r["informados_con"], r["informados_sin"])
+
+
+class CasoUtilidad(unittest.TestCase):
+    def test_porcentaje_util_sin_nombres(self):
+        filas = resumen_utilidad({"Deja las instrucciones también por escrito": [3, 1], "X": [0, 0]})
+        self.assertEqual(len(filas), 1)                      # sin votos no aparece
+        self.assertAlmostEqual(filas[0]["Útil"], 0.75)       # 3 / (3 + 1)
+        self.assertEqual(filas[0]["Votos"], 4)
+        self.assertEqual(set(filas[0]), {"Herramienta", "Necesidad", "Votos", "Útil"})   # sin nombres
 
 
 class CasoSimulacion(unittest.TestCase):
