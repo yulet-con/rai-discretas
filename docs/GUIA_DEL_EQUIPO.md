@@ -210,7 +210,25 @@ La red es de todos y cada quien llega por lo que le gusta.
   luego suma las dependencias al revés. Costo O(|V|·|E|).
 → `modelo.grafo_docentes`, `grafos.intermediacion`.
 
-**Cómo cambiarlo.** Umbral → `UMBRAL_DOCENTES` en `app.py`. Mensajes iniciales del foro →
+**Por qué el umbral cambia con los datos (evidencia).** Densidad del grafo de docentes con la
+simulación de referencia (universidad, 450 perfiles, semilla 42):
+
+| Umbral | 3 | 4 | 6 | 8 |
+|---|---|---|---|---|
+| Densidad | 95 % | 89 % | 61 % | **26 %** |
+
+Con 3 o 4 el grafo es casi completo y todos los docentes tienen la misma centralidad. Un umbral
+fijo tampoco sirve para todo el rango: con 300 perfiles (semilla 7), 8 deja 5 de 12 docentes
+aislados. Por eso se usa la regla (menor umbral con densidad ≤ 40 %), que da:
+
+| Configuración | Umbral cursos | Umbral docentes | Docentes aislados |
+|---|---|---|---|
+| Universidad 450, semilla 42 | 3 | 8 | 1 de 12 |
+| Universidad 300, semilla 7 | 2 | 6 | 1 de 12 |
+| Universidad 600, semilla 100 | 3 | 9 | 1 de 12 |
+| Colegio 450, semilla 42 | 1 | 13 | 0 de 16 |
+
+**Cómo cambiarlo.** Umbral → `DENSIDAD_MAXIMA` en `rai/modelo.py`. Mensajes iniciales del foro →
 `st.session_state.setdefault("foro", ...)` en `app.py`.
 
 **Nota.** En el prototipo los mensajes del foro y las solicitudes se guardan solo mientras la app
