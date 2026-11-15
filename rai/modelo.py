@@ -71,6 +71,30 @@ def grafo_cursos(datos, umbral=1):
     return g
 
 
+DENSIDAD_MAXIMA = 0.4
+
+
+def densidad(g):
+    """Fracción de las aristas posibles que existen: m / (n(n-1)/2)."""
+    n = len(g.adj)
+    m = sum(len(v) for v in g.adj.values()) // 2
+    return m / (n * (n - 1) / 2) if n > 1 else 0.0
+
+
+def umbral_adaptativo(datos, construir, densidad_max=DENSIDAD_MAXIMA):
+    """Menor umbral que deja el grafo con densidad <= densidad_max.
+
+    Con umbral 1 casi todos los vértices quedan unidos con todos y la
+    centralidad no distingue a nadie. La misma regla sirve para el grafo de
+    cursos y el de docentes; el número sale de los datos (los docentes dictan
+    varios cursos y comparten más estudiantes, por eso su umbral es mayor).
+    """
+    u = 1
+    while densidad(construir(datos, u)) > densidad_max:
+        u += 1
+    return u
+
+
 def grafo_docentes(datos, umbral=1):
     """Vértice = docente. Arista si sus cursos comparten al menos `umbral`
     estudiantes con necesidad visible (estudiantes distintos)."""
@@ -186,7 +210,7 @@ def panel_curso(datos, curso_id):
 ESTADOS_SOLICITUD = ["Pendiente", "Agendada", "Realizada"]
 
 
-def solicitudes_simuladas(datos, semilla=0, prob=0.5, minimo=3, umbral_docentes=4):
+def solicitudes_simuladas(datos, semilla=0, prob=0.5, minimo=3, umbral_docentes=None):
     """Solicitudes de planeación que harían los docentes en las semanas 1 a 3.
 
     Supuesto: un docente pide planear un curso con probabilidad `prob` si ese curso
@@ -195,6 +219,8 @@ def solicitudes_simuladas(datos, semilla=0, prob=0.5, minimo=3, umbral_docentes=
     """
     import random
     rng = random.Random(semilla)
+    if umbral_docentes is None:
+        umbral_docentes = umbral_adaptativo(datos, grafo_docentes)
     gd = grafo_docentes(datos, umbral_docentes)
     nombre = {d["id"]: d["nombre"] for d in datos["docentes"]}
     res = []

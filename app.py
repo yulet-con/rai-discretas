@@ -24,7 +24,6 @@ from rai.simulacion import TABLAS, cargar_textos, faltantes, simular
 
 MORADO, AZUL, VERDE, NARANJA, GRIS, ROSA = "#7C3AED", "#2563EB", "#059669", "#D97706", "#64748B", "#DB2777"
 FONDO = {MORADO: "#F5F3FF", AZUL: "#DBEAFE", VERDE: "#D1FAE5", NARANJA: "#FEF3C7", ROSA: "#FCE7F3", GRIS: "#F1F5F9"}
-UMBRAL_CURSOS, UMBRAL_DOCENTES = 3, 4
 
 st.set_page_config(page_title="RAI · Red de Apoyo Inclusivo", page_icon="🤝", layout="wide")
 st.markdown("""
@@ -163,12 +162,15 @@ def calculos(_datos, clave, auto, ajustes, seguimiento):
     antes, despues = M.grafo_colaboracion(_datos), M.grafo_colaboracion(_datos, con_actividades=True)
     return {"alertas": M.alertas(_datos), "part": {k: len(v) for k, v in M.participantes(_datos).items()},
             "aislados_antes": G.aislados(antes), "aislados_despues": G.aislados(despues),
-            "semestre": simular_semestre(_datos, auto / 100, ajustes, seguimiento)}
+            "semestre": simular_semestre(_datos, auto / 100, ajustes, seguimiento),
+            "umbral_cursos": M.umbral_adaptativo(_datos, M.grafo_cursos),
+            "umbral_docentes": M.umbral_adaptativo(_datos, M.grafo_docentes)}
 
 
 sup = st.session_state.setdefault("supuestos", {"auto": 30, "ajustes": 0.4, "seguimiento": 0.3})
 R = calculos(datos, clave_datos, sup["auto"], sup["ajustes"], sup["seguimiento"])
 S = R["semestre"]
+UMBRAL_CURSOS, UMBRAL_DOCENTES = R["umbral_cursos"], R["umbral_docentes"]
 gd = M.grafo_docentes(datos, UMBRAL_DOCENTES)
 bt_doc = G.intermediacion(gd, normalizada=True)
 mentores = sorted(docentes, key=lambda d: (-bt_doc[d], -len(gd.adj[d])))[:3]
@@ -353,7 +355,7 @@ if pagina == INICIO:
         izq, der = st.columns([3, 2])
         with izq:
             dibujar_grafo(gd, nombre_doc, color_por=bt_doc, alto=380)
-            st.caption(f"Vértice = docente · arista = comparten al menos {UMBRAL_DOCENTES} estudiantes con apoyo · "
+            st.caption(f"Vértice = docente · arista = comparten al menos {UMBRAL_DOCENTES} estudiante{'s' if UMBRAL_DOCENTES != 1 else ''} con apoyo · "
                        "color = intermediación.")
         with der:
             tabla(sol[:6], ["Semana", "Docente", "Curso", "Invitar también a"])
@@ -480,8 +482,9 @@ elif pagina == RAMAS[1]:
         a, b = st.columns([3, 2])
         with a:
             dibujar_grafo(gc, nombre_curso, color_por=bt)
-            st.caption(f"Vértice = curso. Arista = comparten al menos {UMBRAL_CURSOS} estudiantes con apoyo. "
-                       "Tamaño = grado · color = intermediación.")
+            st.caption(f"Vértice = curso. Arista = comparten al menos {UMBRAL_CURSOS} estudiante{'s' if UMBRAL_CURSOS != 1 else ''} con apoyo. "
+                       "Tamaño = grado · color = intermediación. El umbral es el menor que deja el grafo "
+                       f"con densidad ≤ {M.DENSIDAD_MAXIMA:.0%}: así la centralidad distingue cursos.")
         with b:
             tabla(sorted(({"Curso": nombre_curso[v], "Grado": gr[v], "Cercanía": f"{ce[v]:.2f}",
                            "Intermediación": f"{bt[v]:.3f}"} for v in gc.vertices()),
@@ -628,8 +631,10 @@ elif pagina == RAMAS[4]:
         a, b = st.columns([3, 2])
         with a:
             dibujar_grafo(gd, nombre_doc, color_por=bt_doc)
-            st.caption(f"Vértice = docente. Arista = comparten al menos {UMBRAL_DOCENTES} estudiantes "
-                       "con apoyo. Mentor = mayor intermediación (conecta a más colegas).")
+            st.caption(f"Vértice = docente. Arista = comparten al menos {UMBRAL_DOCENTES} estudiante{'s' if UMBRAL_DOCENTES != 1 else ''} "
+                       "con apoyo. Mentor = mayor intermediación (conecta a más colegas). El umbral es el menor "
+                       f"que deja el grafo con densidad ≤ {M.DENSIDAD_MAXIMA:.0%}; es mayor que el de cursos "
+                       "porque cada docente dicta varios cursos y comparte más estudiantes.")
         with b:
             tabla(sorted(({"Docente": nombre_doc[v], "Grado": gr[v], "Cercanía": f"{ce[v]:.2f}",
                            "Intermediación": f"{bt_doc[v]:.3f}"} for v in gd.vertices()),

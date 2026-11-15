@@ -83,6 +83,7 @@ python -m unittest -v
 | Encuesta para todos | necesidades y % del grupo sin diagnóstico |
 | Agrupación en necesidades comunes | un estudiante cuenta una vez por necesidad |
 | Alerta de mitad de semestre | solo apoyo con consentimiento y nota < 3,0 |
+| Umbral de los grafos | densidad(estrella) = 3/6; menor umbral con densidad ≤ 40 % |
 | Simulación | 300–600 perfiles, misma semilla → mismos datos |
 
 ## Datos

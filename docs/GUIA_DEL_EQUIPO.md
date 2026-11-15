@@ -102,7 +102,8 @@ idéntico; si los efectos se ponen en 0, los dos escenarios dan lo mismo (prueba
 solicitudes de planeación.
 
 **Teoría: centralidad en el grafo de cursos** (desplegable "Σ Cómo funciona")
-- Vértice = curso. Arista = dos cursos comparten al menos 3 estudiantes con apoyo.
+- Vértice = curso. Arista = dos cursos comparten al menos *u* estudiantes con apoyo (con los datos de
+  referencia, *u* = 3).
 - El curso con **mayor intermediación** conecta a otros cursos: conviene empezar por ahí.
 
 **Ejemplo pequeño (caso de prueba 1).** Cursos A, B, C, D con aristas AB, BC, BD.
@@ -112,10 +113,17 @@ solicitudes de planeación.
 
 **Dónde está.** `modelo.grafo_cursos`, `grafos.grado`, `grafos.cercania`, `grafos.intermediacion`.
 
-**Cómo cambiarlo.** El umbral de 3 estudiantes es `UMBRAL_CURSOS` al inicio de `app.py`.
+**Cómo cambiarlo.** El umbral no es fijo: `modelo.umbral_adaptativo` toma el menor *u* que deja el
+grafo con densidad ≤ 40 % (`DENSIDAD_MAXIMA` en `rai/modelo.py`).
 
 **Pregunta probable:** *"¿Por qué un umbral?"* → Con 1 estudiante casi todos los cursos quedan
 unidos con todos y la centralidad no distingue nada. El umbral deja solo las conexiones fuertes.
+*Densidad* = aristas que hay / aristas posibles = m / (n(n−1)/2).
+
+**Pregunta probable:** *"¿Por qué 3 en cursos y 8 en docentes?"* → Es la misma regla para los dos
+grafos (densidad ≤ 40 %); el número sale de los datos. Cada docente dicta varios cursos, así que
+dos docentes comparten más estudiantes que dos cursos. Con 4, el grafo de docentes tenía el 89 % de
+las aristas posibles y todos salían con grado 11 y cercanía 1,00.
 
 ---
 
@@ -194,7 +202,8 @@ La red es de todos y cada quien llega por lo que le gusta.
 **Qué ve el usuario.** Un foro (con opción anónima), mentores sugeridos y colegas por invitar.
 
 **Teoría: red de docentes e intermediación (algoritmo de Brandes).**
-- Vértice = docente. Arista = comparten al menos 4 estudiantes con apoyo.
+- Vértice = docente. Arista = comparten al menos *u* estudiantes con apoyo (con los datos de
+  referencia, *u* = 8; misma regla de densidad ≤ 40 %).
 - **Mentor** = mayor intermediación: es el puente entre más colegas.
 - **Por invitar** = menor grado: los menos conectados de la red.
 - Brandes: desde cada vértice hace una búsqueda en anchura (BFS) contando caminos más cortos y

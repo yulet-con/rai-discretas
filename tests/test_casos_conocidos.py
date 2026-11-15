@@ -6,7 +6,7 @@ import unittest
 from itertools import product
 
 from rai.grafos import Grafo, aislados, cercania, componentes_conexas, grado, intermediacion
-from rai.modelo import (alertas, lista_curso, mostrar_ajuste, necesidades_comunes,
+from rai.modelo import (alertas, densidad, lista_curso, umbral_adaptativo, mostrar_ajuste, necesidades_comunes,
                         necesidades_por_perfil, panel_curso, perfil_grupo, visibles)
 from rai.semestre import simular_semestre
 from rai.simulacion import simular
@@ -34,6 +34,24 @@ class CasoCentralidad(unittest.TestCase):
         cb = intermediacion(estrella())
         self.assertEqual(cb, {"A": 0, "B": 3, "C": 0, "D": 0})
         self.assertAlmostEqual(intermediacion(estrella(), normalizada=True)["B"], 1.0)
+
+
+class CasoUmbral(unittest.TestCase):
+    def test_densidad_y_umbral(self):
+        # Estrella: 3 aristas de 6 posibles -> densidad 0,5.
+        self.assertAlmostEqual(densidad(estrella()), 0.5)
+
+        # Pesos A-B=5, B-C=3, C-D=1, A-C=1, B-D=1, A-D=1 (completo con umbral 1).
+        pesos = {("A", "B"): 5, ("B", "C"): 3, ("C", "D"): 1, ("A", "C"): 1, ("B", "D"): 1, ("A", "D"): 1}
+
+        def construir(_datos, u):
+            g = Grafo("ABCD")
+            for (x, y), w in pesos.items():
+                if w >= u:
+                    g.agregar_arista(x, y, w)
+            return g
+        # u=1: 6/6 = 1.0; u=2: 2/6 = 0,33 <= 0,4 -> el umbral es 2.
+        self.assertEqual(umbral_adaptativo(None, construir), 2)
 
 
 def dos_grupos():
