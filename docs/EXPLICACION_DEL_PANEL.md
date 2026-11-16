@@ -447,10 +447,19 @@ python -m unittest -v
 
 ---
 
-## 7. 📘 Guía del equipo
+## 7. ❓ Preguntas frecuentes
 
-Muestra dentro de la app el archivo `docs/GUIA_DEL_EQUIPO.md`, con la teoría de cada pantalla,
-cómo cambiar cosas y las preguntas probables.
+**Qué es, en fácil:** las dudas comunes de quienes usan la plataforma, separadas en estudiantes,
+profesores, unidad de apoyo y privacidad. Tiene un **buscador**: al escribir "foro" o
+"diagnóstico" quedan solo las preguntas que tienen esa palabra.
+
+**Cómo está hecho:** `app.py` lee `docs/PREGUNTAS_FRECUENTES.md`. Cada línea `##` es un grupo,
+cada `###` es una pregunta (se muestra como desplegable) y el texto siguiente es la respuesta.
+`{unidad}` se cambia por «Bienestar Universitario» u «Orientación Escolar» según la institución.
+Para agregar una pregunta basta con editar ese archivo.
+
+La **guía del equipo** (`docs/GUIA_DEL_EQUIPO.md`) sigue en el repositorio para estudiar, pero ya
+no aparece en el panel.
 
 ---
 

@@ -9,6 +9,7 @@ Ejecutar:  python -m streamlit run app.py
 import html
 import math
 import os
+import re
 import time
 import unittest
 from collections import Counter
@@ -195,9 +196,9 @@ mentores = sorted(docentes, key=lambda d: (-bt_doc[d], -len(gd.adj[d])))[:3]
 por_invitar = sorted(docentes, key=lambda d: (len(gd.adj[d]), bt_doc[d]))[:3]
 
 # ---------------------------------------------------------------- barra lateral
-INICIO, GUIA = "▶ Iniciar semestre", "📘 Guía del equipo"
+INICIO, FAQ = "▶ Iniciar semestre", "❓ Preguntas frecuentes"
 RAMAS = [INICIO, "🏛️ Bienestar", "1 · Apoyo académico", "2 · Integración", "3 · Comunidad docente",
-         "✓ Pruebas", GUIA]
+         "✓ Pruebas", FAQ]
 with st.sidebar:
     st.markdown(f"<h2 style='color:{PRINCIPAL};margin-bottom:0'>🧩 RAI</h2>"
                 "<div class='rai-nota'>Red de Apoyo Inclusivo</div>"
@@ -754,8 +755,34 @@ elif pagina == RAMAS[5]:
                     f"Componentes esperadas: 3 · obtenidas: **{len(G.componentes_conexas(g))}**")
 
 
-# ================================================================ Guía del equipo
-elif pagina == GUIA:
-    ruta = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs", "GUIA_DEL_EQUIPO.md")
+# ================================================================ Preguntas frecuentes
+elif pagina == FAQ:
+    st.title("Preguntas frecuentes")
+    st.caption("Para estudiantes, profesores y la unidad de apoyo. Las preguntas están en "
+               "docs/PREGUNTAS_FRECUENTES.md y se pueden editar sin tocar el código.")
+    ruta = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs", "PREGUNTAS_FRECUENTES.md")
     with open(ruta, encoding="utf-8") as f:
-        st.markdown(f.read())
+        texto = re.sub(r"<!--.*?-->", "", f.read(), flags=re.S).replace("{unidad}", conf["unidad_apoyo"])
+    # ## = grupo, ### = pregunta, el resto = respuesta
+    grupos = []
+    for linea in texto.splitlines():
+        if linea.startswith("### "):
+            grupos[-1][1].append([linea[4:].strip(), []])
+        elif linea.startswith("## "):
+            grupos.append([linea[3:].strip(), []])
+        elif grupos and grupos[-1][1]:
+            grupos[-1][1][-1][1].append(linea)
+    buscar = st.text_input("Buscar", placeholder="Ej.: diagnóstico, foro, consentimiento, alerta…")
+    clave = buscar.strip().lower()
+    hay = False
+    for titulo, preguntas in grupos:
+        visibles_faq = [(q, "\n".join(r).strip()) for q, r in preguntas
+                        if not clave or clave in q.lower() or clave in " ".join(r).lower()]
+        if visibles_faq:
+            hay = True
+            st.subheader(titulo)
+            for q, r in visibles_faq:
+                with st.expander(q):
+                    st.markdown(r)
+    if not hay:
+        st.info("No hay preguntas con esa palabra. Pruebe con otra o escríbale a la unidad de apoyo.")

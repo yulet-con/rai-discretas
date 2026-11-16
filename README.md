@@ -51,7 +51,7 @@ La aplicación sigue un árbol: la unidad de apoyo es la raíz y tiene tres rama
 | **2 · Integración** | Bienestar | Actividades por intereses abiertas a todos y estudiantes que siguen aislados |
 | **3 · Comunidad docente** | Docentes | Foro con opción anónima, mentores sugeridos y colegas por invitar |
 | ✓ **Pruebas** | Sustentación | Casos con resultado conocido |
-| 📘 **Guía del equipo** | Integrantes | Cómo se aplica la teoría en cada parte y cómo modificarla |
+| ❓ **Preguntas frecuentes** | Estudiantes, docentes y unidad de apoyo | Dudas comunes con buscador (`docs/PREGUNTAS_FRECUENTES.md`) |
 
 El docente no llena nada extra: las notas de corte llegan del sistema académico (simuladas) y la
 alerta a la unidad de apoyo es automática (`● · nota < 3,0`). Cada rama tiene un desplegable
