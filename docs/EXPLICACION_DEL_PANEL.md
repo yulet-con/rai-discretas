@@ -428,18 +428,22 @@ el 89 % de las aristas posibles y todos salían iguales.
 
 ---
 
-## 6. ✓ Pruebas
+## 6. ✓ Pruebas del modelo (al final de ▶ Iniciar semestre)
 
 **Qué es, en fácil:** la prueba de que las cuentas están bien. Probamos el programa con ejemplos
 pequeños que calculamos a mano; si da lo mismo, está bien.
+
+**Dónde está:** ya no es una pantalla del menú, porque no es algo que usen estudiantes, profesores
+ni Bienestar. Es un desplegable al final de **▶ Iniciar semestre**, a un clic durante la
+demostración por si el profesor pregunta.
 
 **Qué se ve:** "17 de 17 pruebas correctas" y dos casos dibujados:
 - **Caso 1, estrella:** B en el centro conectado con A, C y D. Grado(B) = 3, cercanía(B) = 1,
   intermediación(B) = 3 (los pares A–C, A–D y C–D pasan por B).
 - **Caso 2, red de compañeros:** F aislado y 3 grupos.
 
-**Cómo está hecho:** la pantalla ejecuta en vivo las pruebas de `tests/test_casos_conocidos.py`
-con `unittest`. También se pueden correr en la terminal:
+**Cómo está hecho:** la función `pruebas_del_modelo()` de `app.py` ejecuta en vivo las pruebas de
+`tests/test_casos_conocidos.py` con `unittest`. También se pueden correr en la terminal:
 
 ```bash
 python -m unittest -v

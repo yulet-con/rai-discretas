@@ -258,7 +258,8 @@ está abierta (no hay base de datos). Es trabajo futuro.
 
 ## 9. ✓ Pruebas
 
-`python -m unittest -v` ejecuta las pruebas; la vista "Pruebas" las muestra en la app.
+`python -m unittest -v` ejecuta las pruebas. En la app están en el desplegable **✓ Pruebas del
+modelo**, al final de ▶ Iniciar semestre (no en el menú, porque no son para los usuarios).
 
 | Prueba | Qué comprueba |
 |---|---|
@@ -270,6 +271,8 @@ está abierta (no hay base de datos). Es trabajo futuro.
 | Encuesta para todos | necesidades y % del grupo sin diagnóstico |
 | Necesidades comunes | un estudiante cuenta una vez por necesidad |
 | Alerta | solo apoyo con consentimiento y nota < 3,0 |
+| Umbral de los grafos | densidad(estrella) = 3/6; menor umbral con densidad ≤ 40 % |
+| Utilidad de las herramientas | 3 👍 y 1 👎 → 75 %, sin nombres |
 | Semestre | sin efecto no hay diferencia; con efecto la plataforma no empeora |
 | Simulación | 300–600 perfiles; misma semilla → mismos datos |
 

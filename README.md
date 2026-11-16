@@ -45,12 +45,11 @@ La aplicación sigue un árbol: la unidad de apoyo es la raíz y tiene tres rama
 
 | Vista | Para quién | Qué hace |
 |---|---|---|
-| ▶ **Iniciar semestre** | Demostración | Entrada masiva de encuestas (300–600 perfiles o CSV) y recorrido en 7 etapas de la semana 0 a la 12, con el proceso actual frente a RAI |
+| ▶ **Iniciar semestre** | Demostración | Entrada masiva de encuestas (300–600 perfiles o CSV) y recorrido en 7 etapas de la semana 0 a la 12, con el proceso actual frente a RAI. Al final, el desplegable **✓ Pruebas del modelo** ejecuta las pruebas y dibuja los casos calculados a mano |
 | 🏛️ **Bienestar** | Bienestar / Orientación | Resumen de las tres ramas, alertas de mitad de semestre y solicitudes de planeación |
 | **1 · Apoyo académico** | Docente | Cuántos estudiantes tienen apoyo, necesidades comunes con herramientas, lista de clase con indicador ● y nota de corte, botón para planear en persona |
 | **2 · Integración** | Bienestar | Actividades por intereses abiertas a todos y estudiantes que siguen aislados |
 | **3 · Comunidad docente** | Docentes | Foro con opción anónima, mentores sugeridos y colegas por invitar |
-| ✓ **Pruebas** | Sustentación | Casos con resultado conocido |
 | ❓ **Preguntas frecuentes** | Estudiantes, docentes y unidad de apoyo | Dudas comunes con buscador (`docs/PREGUNTAS_FRECUENTES.md`) |
 
 El docente no llena nada extra: las notas de corte llegan del sistema académico (simuladas) y la

@@ -136,6 +136,32 @@ def distribucion_grado(antes, despues, alto=280):
     st.plotly_chart(fig, width="stretch")
 
 
+# ---------------------------------------------------------------- pruebas (para la sustentación)
+def pruebas_del_modelo():
+    """Ejecuta las pruebas con resultado conocido y dibuja los dos casos calculados a mano.
+    No es una pantalla para usuarios: está al final de ▶ Iniciar semestre para la sustentación."""
+    import tests.test_casos_conocidos as T
+    with open(os.devnull, "w") as nulo:
+        res = unittest.TextTestRunner(verbosity=0, stream=nulo).run(
+            unittest.defaultTestLoader.loadTestsFromModule(T))
+    ok = res.testsRun - len(res.failures) - len(res.errors)
+    (st.success if res.wasSuccessful() else st.error)(f"{ok} de {res.testsRun} pruebas correctas")
+    izq, der = st.columns(2)
+    with izq:
+        st.markdown("**Caso 1: estrella (centralidad)**")
+        g = T.estrella()
+        dibujar_grafo(g, color_por=G.intermediacion(g), alto=320)
+        gr, ce, bt = G.grado(g), G.cercania(g), G.intermediacion(g)
+        tabla([{"Vértice": v, "Grado": gr[v], "Cercanía": f"{ce[v]:.2f}", "Intermediación": bt[v]}
+               for v in sorted(g.vertices())])
+    with der:
+        st.markdown("**Caso 2: red de compañeros**")
+        g = T.dos_grupos()
+        dibujar_grafo(g, alto=320)
+        st.markdown(f"Aislados esperados: F · obtenidos: **{', '.join(G.aislados(g))}**  \n"
+                    f"Componentes esperadas: 3 · obtenidas: **{len(G.componentes_conexas(g))}**")
+
+
 # ---------------------------------------------------------------- datos (simulados o cargados)
 @st.cache_data(show_spinner="Simulando inicio de semestre…")
 def datos_simulados(tipo, n, prop, semilla):
@@ -197,8 +223,7 @@ por_invitar = sorted(docentes, key=lambda d: (len(gd.adj[d]), bt_doc[d]))[:3]
 
 # ---------------------------------------------------------------- barra lateral
 INICIO, FAQ = "▶ Iniciar semestre", "❓ Preguntas frecuentes"
-RAMAS = [INICIO, "🏛️ Bienestar", "1 · Apoyo académico", "2 · Integración", "3 · Comunidad docente",
-         "✓ Pruebas", FAQ]
+RAMAS = [INICIO, "🏛️ Bienestar", "1 · Apoyo académico", "2 · Integración", "3 · Comunidad docente", FAQ]
 with st.sidebar:
     st.markdown(f"<h2 style='color:{PRINCIPAL};margin-bottom:0'>🧩 RAI</h2>"
                 "<div class='rai-nota'>Red de Apoyo Inclusivo</div>"
@@ -445,6 +470,10 @@ if pagina == INICIO:
                 st.rerun()
         teoria("la variación aleatoria es la misma en los dos escenarios; si los efectos fueran cero, los "
                "resultados serían idénticos (prueba automática).")
+
+    st.write("")
+    with st.expander("✓ Pruebas del modelo (casos con resultado conocido)"):
+        pruebas_del_modelo()
 
 
 # ================================================================ RAÍZ: Bienestar
@@ -728,31 +757,6 @@ elif pagina == RAMAS[4]:
             tabla(sorted(({"Docente": nombre_doc[v], "Grado": gr[v], "Cercanía": f"{ce[v]:.2f}",
                            "Intermediación": f"{bt_doc[v]:.3f}"} for v in gd.vertices()),
                          key=lambda f: -float(f["Intermediación"])))
-
-
-# ================================================================ Pruebas
-elif pagina == RAMAS[5]:
-    st.title("Pruebas con resultado conocido")
-    import tests.test_casos_conocidos as T
-    with open(os.devnull, "w") as nulo:
-        res = unittest.TextTestRunner(verbosity=0, stream=nulo).run(
-            unittest.defaultTestLoader.loadTestsFromModule(T))
-    ok = res.testsRun - len(res.failures) - len(res.errors)
-    (st.success if res.wasSuccessful() else st.error)(f"{ok} de {res.testsRun} pruebas correctas")
-    izq, der = st.columns(2)
-    with izq:
-        st.subheader("Caso 1: estrella (centralidad)")
-        g = T.estrella()
-        dibujar_grafo(g, color_por=G.intermediacion(g), alto=320)
-        gr, ce, bt = G.grado(g), G.cercania(g), G.intermediacion(g)
-        tabla([{"Vértice": v, "Grado": gr[v], "Cercanía": f"{ce[v]:.2f}", "Intermediación": bt[v]}
-               for v in sorted(g.vertices())])
-    with der:
-        st.subheader("Caso 2: red de compañeros")
-        g = T.dos_grupos()
-        dibujar_grafo(g, alto=320)
-        st.markdown(f"Aislados esperados: F · obtenidos: **{', '.join(G.aislados(g))}**  \n"
-                    f"Componentes esperadas: 3 · obtenidas: **{len(G.componentes_conexas(g))}**")
 
 
 # ================================================================ Preguntas frecuentes
