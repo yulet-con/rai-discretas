@@ -402,15 +402,9 @@ if pagina == INICIO:
         k[0].metric("Solicitudes de planeación", len(sol))
         k[1].metric("Mentores sugeridos", ", ".join(nombre_doc[d].replace("Prof. ", "") for d in mentores[:1]))
         k[2].metric("Docentes conectados en la red", sum(1 for d in docentes if gd.adj[d]))
-        izq, der = st.columns([3, 2])
-        with izq:
-            dibujar_grafo(gd, nombre_doc, color_por=bt_doc, alto=380)
-            st.caption(f"Vértice = docente · arista = comparten al menos {UMBRAL_DOCENTES} estudiante{'s' if UMBRAL_DOCENTES != 1 else ''} con apoyo · "
-                       "color = intermediación.")
-        with der:
-            tabla(sol[:6], ["Semana", "Docente", "Curso", "Invitar también a"])
-        teoria("análisis de redes. Al pedir una reunión se sugiere invitar a los vecinos del docente en el "
-               "grafo; el de mayor intermediación es el mentor que conecta a más colegas.")
+        tabla(sol[:6], ["Semana", "Docente", "Curso", "Invitar también a"])
+        teoria("análisis de redes. Al pedir una reunión se sugiere invitar a los colegas que comparten "
+               "estudiantes con el docente (sus vecinos en el grafo de docentes, que se ve en Comunidad docente).")
 
     # ---- Etapa 4: integración
     elif etapa == 4:
@@ -673,6 +667,14 @@ elif pagina == RAMAS[2]:
                         {"Docente": nombre_doc[doc_id], "Curso": nombre_curso[c], "Observación": texto})
                     st.success("Observación enviada.")
 
+    with st.expander("Σ Cómo funciona"):
+        st.markdown(
+            "- **Álgebra booleana:** el indicador ● = p · q · r · a (inscrito, necesidad registrada, "
+            "consentimiento del semestre y ajuste autorizado).\n"
+            "- **Conjuntos y funciones:** cada necesidad común cuenta |C ∩ V ∩ f⁻¹(n)|; un estudiante con varias "
+            "categorías cuenta una sola vez. La encuesta de todos da el perfil del grupo.\n"
+            "- **Alerta:** ● · (nota < 3,0) → aviso automático a la unidad de apoyo.\n"
+            "- **Análisis de redes:** a quién invitar a la planeación (vecinos en el grafo de docentes).")
     with st.expander("Ver la tabla de verdad del ● (16 combinaciones)"):
         st.caption("● = p · q · r · a. Solo se enciende cuando las cuatro condiciones son 1.")
         filas = []

@@ -76,7 +76,7 @@ con **Siguiente etapa »**. Cada etapa dice qué teoría usa (Σ).
 | Semana 0 · Encuestas | Llegan las encuestas de **todos**; % de acuerdo por pregunta | Conjuntos (E = todos) |
 | Semana 0 · Cruce | Se cruza con el proceso existente: q, r, a | **Álgebra booleana**: ● = p·q·r·a |
 | Semana 1 · Paneles | Proceso actual vs. RAI; ejemplo de panel | Funciones |
-| Semanas 2–3 · Planeación | Solicitudes, red de docentes, mentores | **Análisis de redes** |
+| Semanas 2–3 · Planeación | Solicitudes, a quién invitar, mentores | **Análisis de redes** |
 | Semana 6 · Integración | Aislados y grupos separados, antes y después | Grado 0 y componentes |
 | Semana 8 · Primer corte | Alertas por curso | **Álgebra booleana**: alerta = ●·t |
 | Semana 12 · Resultados | Proceso actual vs. RAI; supuestos ajustables | Simulación |

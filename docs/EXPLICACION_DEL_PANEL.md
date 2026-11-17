@@ -142,7 +142,8 @@ que tienen consentimiento y autorización. El panel de ejemplo usa `modelo.panel
 ### 1.6 Etapa 4 · Semanas 2–3: planeación antes de la primera nota
 
 **Qué se ve:** cuántas solicitudes de planeación hubo, el mentor sugerido, cuántos profesores
-están conectados y el grafo de docentes.
+están conectados y la tabla de solicitudes con a quién invitar. El grafo de docentes no se
+repite aquí: se ve en 3 · Comunidad docente.
 
 **Qué significa:** antes del primer parcial los profesores piden reunirse con Bienestar para
 planear. RAI sugiere a quién más invitar: los colegas que **comparten estudiantes** con él.
@@ -330,11 +331,12 @@ le llegó a Bienestar sola.
   docentes con más peso).
 - **💬 Enviar una observación:** un texto corto que le llega a Bienestar.
 
-### 3.6 Tabla de verdad del ●
+### 3.6 Σ Cómo funciona y tabla de verdad del ●
 
-Desplegable con las 16 combinaciones de p, q, r y a. Solo una (todas en 1) enciende el ●: así el
-profesor ve por qué un estudiante tiene o no el círculo. El resumen de la teoría de esta pantalla
-está en la etapa 2 de ▶ Iniciar semestre.
+Dos desplegables al final. **Σ Cómo funciona** resume la teoría de esta pantalla: álgebra booleana
+(●), conjuntos y funciones (necesidades), la alerta y el análisis de redes. La **tabla de verdad**
+muestra las 16 combinaciones de p, q, r y a: solo una (todas en 1) enciende el ●, así el profesor
+ve por qué un estudiante tiene o no el círculo.
 
 ---
 
