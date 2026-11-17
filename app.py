@@ -312,6 +312,9 @@ if pagina == INICIO:
     if etapa < 0:
         st.info(f"Listo para empezar: {len(est)} estudiantes, {len(cursos)} cursos y {len(docentes)} docentes "
                 f"({conf['nombre'].lower()}). Presione **▶ Iniciar semestre**.")
+        st.caption("Antes de la demostración: las pruebas muestran que las cuentas del modelo están bien.")
+        with st.expander("✓ Pruebas del modelo (casos con resultado conocido)"):
+            pruebas_del_modelo()
 
     # ---- Etapa 0: encuestas para todos
     elif etapa == 0:
@@ -352,17 +355,17 @@ if pagina == INICIO:
         st.markdown("<div class='rai-formula'>● = p · q · r · a</div>", unsafe_allow_html=True)
         st.caption("p: está inscrito en el curso · q: tiene una necesidad registrada en el programa · "
                    "r: dio su consentimiento este semestre · a: el programa académico autorizó los ajustes.")
-        with st.expander("Ver la tabla de verdad (16 combinaciones)"):
-            filas = []
-            for p_ in (1, 0):
-                for q_ in (1, 0):
-                    for r_ in (1, 0):
-                        for a_ in (1, 0):
-                            filas.append({"p": p_, "q": q_, "r": r_, "a": a_,
-                                          "●": int(M.mostrar_ajuste(p_, q_, r_, a_))})
-            tabla(filas)
+        with st.expander("Σ Cómo funciona el panel del profesor"):
+            st.markdown(
+                "- **Álgebra booleana:** el indicador ● = p · q · r · a (inscrito, necesidad registrada, "
+                "consentimiento del semestre y ajuste autorizado).\n"
+                "- **Conjuntos y funciones:** cada necesidad común cuenta |C ∩ V ∩ f⁻¹(n)|; un estudiante con varias "
+                "categorías cuenta una sola vez. La encuesta de todos da el perfil del grupo.\n"
+                "- **Alerta:** ● · (nota < 3,0) → aviso automático a la unidad de apoyo.\n"
+                "- **Análisis de redes:** a quién invitar a la planeación (vecinos en el grafo de docentes).")
         teoria("álgebra booleana. El indicador es un AND de cuatro variables: solo 1 de las 16 "
-               "combinaciones lo enciende. Sin consentimiento o sin autorización, no aparece.")
+               "combinaciones lo enciende (la tabla de verdad está en Apoyo académico). Sin consentimiento o "
+               "sin autorización, no aparece.")
 
     # ---- Etapa 2: paneles de los profesores
     elif etapa == 2:
@@ -470,10 +473,6 @@ if pagina == INICIO:
                 st.rerun()
         teoria("la variación aleatoria es la misma en los dos escenarios; si los efectos fueran cero, los "
                "resultados serían idénticos (prueba automática).")
-
-    st.write("")
-    with st.expander("✓ Pruebas del modelo (casos con resultado conocido)"):
-        pruebas_del_modelo()
 
 
 # ================================================================ RAÍZ: Bienestar
@@ -674,14 +673,16 @@ elif pagina == RAMAS[2]:
                         {"Docente": nombre_doc[doc_id], "Curso": nombre_curso[c], "Observación": texto})
                     st.success("Observación enviada.")
 
-    with st.expander("Σ Cómo funciona"):
-        st.markdown(
-            "- **Álgebra booleana:** el indicador ● = p · q · r · a (inscrito, necesidad registrada, "
-            "consentimiento del semestre y ajuste autorizado).\n"
-            "- **Conjuntos y funciones:** cada necesidad común cuenta |C ∩ V ∩ f⁻¹(n)|; un estudiante con varias "
-            "categorías cuenta una sola vez. La encuesta de todos da el perfil del grupo.\n"
-            "- **Alerta:** ● · (nota < 3,0) → aviso automático a la unidad de apoyo.\n"
-            "- **Análisis de redes:** a quién invitar a la planeación (vecinos en el grafo de docentes).")
+    with st.expander("Ver la tabla de verdad del ● (16 combinaciones)"):
+        st.caption("● = p · q · r · a. Solo se enciende cuando las cuatro condiciones son 1.")
+        filas = []
+        for p_ in (1, 0):
+            for q_ in (1, 0):
+                for r_ in (1, 0):
+                    for a_ in (1, 0):
+                        filas.append({"p": p_, "q": q_, "r": r_, "a": a_,
+                                      "●": int(M.mostrar_ajuste(p_, q_, r_, a_))})
+        tabla(filas)
 
 
 # ================================================================ 2. Integración

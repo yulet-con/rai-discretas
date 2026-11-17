@@ -259,7 +259,7 @@ está abierta (no hay base de datos). Es trabajo futuro.
 ## 9. ✓ Pruebas
 
 `python -m unittest -v` ejecuta las pruebas. En la app están en el desplegable **✓ Pruebas del
-modelo**, al final de ▶ Iniciar semestre (no en el menú, porque no son para los usuarios).
+modelo**, en ▶ Iniciar semestre antes de presionar el botón (no en el menú, porque no son para los usuarios).
 
 | Prueba | Qué comprueba |
 |---|---|

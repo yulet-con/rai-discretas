@@ -104,8 +104,9 @@ institución»**: el % de estudiantes de acuerdo con cada una de las 5 preguntas
 
 ### 1.4 Etapa 2 · Semana 0: cruce con el proceso que ya existe
 
-**Qué se ve:** 4 cifras (q, q·r, q·r·a y el % con ●), la fórmula **● = p·q·r·a** y un desplegable
-con la tabla de verdad de 16 filas.
+**Qué se ve:** 4 cifras (q, q·r, q·r·a y el % con ●), la fórmula **● = p·q·r·a** y el desplegable
+**Σ Cómo funciona el panel del profesor**, que resume la teoría que se usa en Apoyo académico. La
+tabla de verdad está en Apoyo académico, donde aparece el ●.
 
 **Qué significa:** RAI no inventa un proceso nuevo: se conecta con el que la universidad ya tiene.
 El círculo ● junto al nombre solo aparece si se cumplen **las 4 condiciones**:
@@ -329,10 +330,11 @@ le llegó a Bienestar sola.
   docentes con más peso).
 - **💬 Enviar una observación:** un texto corto que le llega a Bienestar.
 
-### 3.6 Σ Cómo funciona
+### 3.6 Tabla de verdad del ●
 
-Resume la teoría de esta pantalla: álgebra booleana (●), conjuntos y funciones (necesidades),
-y la alerta.
+Desplegable con las 16 combinaciones de p, q, r y a. Solo una (todas en 1) enciende el ●: así el
+profesor ve por qué un estudiante tiene o no el círculo. El resumen de la teoría de esta pantalla
+está en la etapa 2 de ▶ Iniciar semestre.
 
 ---
 
@@ -428,14 +430,15 @@ el 89 % de las aristas posibles y todos salían iguales.
 
 ---
 
-## 6. ✓ Pruebas del modelo (al final de ▶ Iniciar semestre)
+## 6. ✓ Pruebas del modelo (antes de ▶ Iniciar semestre)
 
 **Qué es, en fácil:** la prueba de que las cuentas están bien. Probamos el programa con ejemplos
 pequeños que calculamos a mano; si da lo mismo, está bien.
 
 **Dónde está:** ya no es una pantalla del menú, porque no es algo que usen estudiantes, profesores
-ni Bienestar. Es un desplegable al final de **▶ Iniciar semestre**, a un clic durante la
-demostración por si el profesor pregunta.
+ni Bienestar. Es un desplegable en **▶ Iniciar semestre** que aparece una sola vez, antes de
+presionar el botón: la demostración arranca mostrando que las cuentas están bien y después
+recorre el semestre.
 
 **Qué se ve:** "17 de 17 pruebas correctas" y dos casos dibujados:
 - **Caso 1, estrella:** B en el centro conectado con A, C y D. Grado(B) = 3, cercanía(B) = 1,
